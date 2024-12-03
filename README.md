@@ -29,7 +29,7 @@ Copy the `env.example` file and rename it to `.env` and set the following variab
 4. **Initialize the database**
 
 ```bash
-npm run docker
+pnpm docker
 ```
 
 5. **Run database migrations**
