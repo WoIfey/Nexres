@@ -2,13 +2,14 @@ import nodemailer from 'nodemailer'
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
+    secure: true,
     auth: {
         user: process.env.GMAIL_USER,
         pass: process.env.GMAIL_APP_PASSWORD,
     },
 })
 
-export function sendEmail({
+export async function sendEmail({
     to,
     subject,
     text
@@ -18,7 +19,7 @@ export function sendEmail({
     text: string
 }) {
     try {
-        transporter.sendMail({
+        await transporter.sendMail({
             from: {
                 name: 'Nexres',
                 address: process.env.GMAIL_USER as string,
