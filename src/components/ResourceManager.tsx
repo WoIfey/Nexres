@@ -1,14 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { Button } from './ui/button'
-import {
-	Drawer,
-	DrawerContent,
-	DrawerDescription,
-	DrawerHeader,
-	DrawerTitle,
-	DrawerTrigger,
-} from './ui/drawer'
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
 import { toast } from 'sonner'
@@ -43,20 +36,20 @@ export default function ResourceManager() {
 	}
 
 	return (
-		<Drawer open={isOpen} onOpenChange={setIsOpen}>
-			<DrawerTrigger asChild>
+		<Popover open={isOpen} onOpenChange={setIsOpen}>
+			<PopoverTrigger asChild>
 				<Button>Add Resource</Button>
-			</DrawerTrigger>
-			<DrawerContent>
-				<div className="mx-auto w-full max-w-sm">
-					<DrawerHeader className="mt-4">
-						<DrawerTitle>Create Resource</DrawerTitle>
-						<DrawerDescription>
+			</PopoverTrigger>
+			<PopoverContent className="w-80">
+				<div className="grid gap-4">
+					<div className="space-y-2">
+						<h4 className="font-medium leading-none">Create Resource</h4>
+						<p className="text-sm text-muted-foreground">
 							Add a new resource that can be booked.
-						</DrawerDescription>
-					</DrawerHeader>
+						</p>
+					</div>
 
-					<form onSubmit={handleSubmit} className="space-y-4 p-4 pb-10">
+					<form onSubmit={handleSubmit} className="space-y-4">
 						<div className="space-y-2">
 							<Label htmlFor="name">Resource Name</Label>
 							<Input
@@ -81,7 +74,7 @@ export default function ResourceManager() {
 						</Button>
 					</form>
 				</div>
-			</DrawerContent>
-		</Drawer>
+			</PopoverContent>
+		</Popover>
 	)
 }

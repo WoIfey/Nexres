@@ -22,6 +22,13 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
+import {
+	Drawer,
+	DrawerContent,
+	DrawerHeader,
+	DrawerTitle,
+	DrawerTrigger,
+} from '@/components/ui/drawer'
 
 interface Booking {
 	date: string | Date
@@ -58,8 +65,8 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 	const [endDate, setEndDate] = useState<Date | undefined>()
 	const [isLoading, setIsLoading] = useState(false)
 	const [selectedResource, setSelectedResource] = useState<string>()
-	const [isOpenStart, setIsOpenStart] = useState(false)
-	const [isOpenEnd, setIsOpenEnd] = useState(false)
+	const [isStartDrawerOpen, setIsStartDrawerOpen] = useState(false)
+	const [isEndDrawerOpen, setIsEndDrawerOpen] = useState(false)
 	const [isDeletingResource, setIsDeletingResource] = useState<string | null>(
 		null
 	)
@@ -224,8 +231,8 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 
 					<div>
 						<label className="text-sm font-medium mb-2 block">Start Date</label>
-						<Popover open={isOpenStart} onOpenChange={setIsOpenStart}>
-							<PopoverTrigger asChild>
+						<Drawer open={isStartDrawerOpen} onOpenChange={setIsStartDrawerOpen}>
+							<DrawerTrigger asChild>
 								<Button
 									variant="outline"
 									className={cn(
@@ -235,11 +242,16 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 									disabled={!selectedResource}
 								>
 									<CalendarIcon className="mr-2 h-4 w-4" />
-									{startDate ? format(startDate, 'MM/dd/yyyy HH:mm') : ''}
+									{startDate
+										? format(startDate, 'MM/dd/yyyy HH:mm')
+										: 'Select start date'}
 								</Button>
-							</PopoverTrigger>
-							<PopoverContent className="w-auto p-0" align="start">
-								<div className="p-4 space-y-4">
+							</DrawerTrigger>
+							<DrawerContent>
+								<DrawerHeader>
+									<DrawerTitle className="text-center">Select start date</DrawerTitle>
+								</DrawerHeader>
+								<div className="p-4 space-y-4 flex flex-col items-center">
 									<Calendar
 										mode="single"
 										selected={startDate}
@@ -253,75 +265,76 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 											}
 										}}
 										disabled={{ before: new Date() }}
-										autoFocus
 									/>
 
-									<div className="flex items-center gap-2 pt-4 border-t">
-										<Select
-											value={startDate ? String(startDate.getHours()) : ''}
-											onValueChange={value => {
-												if (startDate) {
-													const updated = setHours(startDate, parseInt(value))
-													setStartDate(updated)
-												}
-											}}
-										>
-											<SelectTrigger className="w-[110px]">
-												<SelectValue placeholder="Hour" />
-											</SelectTrigger>
-											<SelectContent>
-												{startDate
-													? getAvailableHours(startDate).map(hour => (
-															<SelectItem key={hour} value={String(hour)}>
-																{String(hour).padStart(2, '0')}:00
-															</SelectItem>
-														))
-													: Array.from({ length: 24 }, (_, i) => (
-															<SelectItem key={i} value={String(i)}>
-																{String(i).padStart(2, '0')}:00
-															</SelectItem>
-														))}
-											</SelectContent>
-										</Select>
+									<div className="flex flex-col items-center gap-4 pt-4 border-t w-full">
+										<div className="flex items-center gap-2">
+											<Select
+												value={startDate ? String(startDate.getHours()) : ''}
+												onValueChange={value => {
+													if (startDate) {
+														const updated = setHours(startDate, parseInt(value))
+														setStartDate(updated)
+													}
+												}}
+											>
+												<SelectTrigger className="w-[110px]">
+													<SelectValue placeholder="Hour" />
+												</SelectTrigger>
+												<SelectContent>
+													{startDate
+														? getAvailableHours(startDate).map(hour => (
+																<SelectItem key={hour} value={String(hour)}>
+																	{String(hour).padStart(2, '0')}:00
+																</SelectItem>
+															))
+														: Array.from({ length: 24 }, (_, i) => (
+																<SelectItem key={i} value={String(i)}>
+																	{String(i).padStart(2, '0')}:00
+																</SelectItem>
+															))}
+												</SelectContent>
+											</Select>
 
-										<Select
-											value={startDate ? String(startDate.getMinutes()) : ''}
-											onValueChange={value => {
-												if (startDate) {
-													const updated = setMinutes(startDate, parseInt(value))
-													setStartDate(updated)
-												}
-											}}
-										>
-											<SelectTrigger className="w-[110px]">
-												<SelectValue placeholder="Minute" />
-											</SelectTrigger>
-											<SelectContent>
-												{startDate && isToday(startDate)
-													? getAvailableMinutes(startDate, startDate.getHours()).map(
-															minute => (
+											<Select
+												value={startDate ? String(startDate.getMinutes()) : ''}
+												onValueChange={value => {
+													if (startDate) {
+														const updated = setMinutes(startDate, parseInt(value))
+														setStartDate(updated)
+													}
+												}}
+											>
+												<SelectTrigger className="w-[110px]">
+													<SelectValue placeholder="Minute" />
+												</SelectTrigger>
+												<SelectContent>
+													{startDate && isToday(startDate)
+														? getAvailableMinutes(startDate, startDate.getHours()).map(
+																minute => (
+																	<SelectItem key={minute} value={String(minute)}>
+																		{String(minute).padStart(2, '0')}
+																	</SelectItem>
+																)
+															)
+														: Array.from({ length: 12 }, (_, i) => i * 5).map(minute => (
 																<SelectItem key={minute} value={String(minute)}>
 																	{String(minute).padStart(2, '0')}
 																</SelectItem>
-															)
-														)
-													: Array.from({ length: 12 }, (_, i) => i * 5).map(minute => (
-															<SelectItem key={minute} value={String(minute)}>
-																{String(minute).padStart(2, '0')}
-															</SelectItem>
-														))}
-											</SelectContent>
-										</Select>
+															))}
+												</SelectContent>
+											</Select>
+										</div>
 									</div>
 								</div>
-							</PopoverContent>
-						</Popover>
+							</DrawerContent>
+						</Drawer>
 					</div>
 
 					<div>
 						<label className="text-sm font-medium mb-2 block">End Date</label>
-						<Popover open={isOpenEnd} onOpenChange={setIsOpenEnd}>
-							<PopoverTrigger asChild>
+						<Drawer open={isEndDrawerOpen} onOpenChange={setIsEndDrawerOpen}>
+							<DrawerTrigger asChild>
 								<Button
 									variant="outline"
 									className={cn(
@@ -331,11 +344,14 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 									disabled={!startDate}
 								>
 									<CalendarIcon className="mr-2 h-4 w-4" />
-									{endDate ? format(endDate, 'MM/dd/yyyy HH:mm') : ''}
+									{endDate ? format(endDate, 'MM/dd/yyyy HH:mm') : 'Select end date'}
 								</Button>
-							</PopoverTrigger>
-							<PopoverContent className="w-auto p-0" align="start">
-								<div className="p-4 space-y-4">
+							</DrawerTrigger>
+							<DrawerContent>
+								<DrawerHeader>
+									<DrawerTitle className="text-center">Select end date</DrawerTitle>
+								</DrawerHeader>
+								<div className="p-4 space-y-4 flex flex-col items-center">
 									<Calendar
 										mode="single"
 										selected={endDate}
@@ -348,67 +364,68 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 										disabled={{
 											before: startDate ? addMinutes(startDate, 5) : new Date(),
 										}}
-										initialFocus
 									/>
 
-									<div className="flex items-center gap-2 pt-4 border-t">
-										<Select
-											value={endDate ? String(endDate.getHours()) : ''}
-											onValueChange={value => {
-												if (endDate) {
-													const updated = setHours(endDate, parseInt(value))
-													setEndDate(updated)
-												}
-											}}
-										>
-											<SelectTrigger className="w-[110px]">
-												<SelectValue placeholder="Hour" />
-											</SelectTrigger>
-											<SelectContent>
-												{endDate
-													? getAvailableHours(endDate).map(hour => (
-															<SelectItem key={hour} value={String(hour)}>
-																{String(hour).padStart(2, '0')}:00
-															</SelectItem>
-														))
-													: Array.from({ length: 24 }, (_, i) => (
-															<SelectItem key={i} value={String(i)}>
-																{String(i).padStart(2, '0')}:00
-															</SelectItem>
-														))}
-											</SelectContent>
-										</Select>
+									<div className="flex flex-col items-center gap-4 pt-4 border-t w-full">
+										<div className="flex items-center gap-2">
+											<Select
+												value={endDate ? String(endDate.getHours()) : ''}
+												onValueChange={value => {
+													if (endDate) {
+														const updated = setHours(endDate, parseInt(value))
+														setEndDate(updated)
+													}
+												}}
+											>
+												<SelectTrigger className="w-[110px]">
+													<SelectValue placeholder="Hour" />
+												</SelectTrigger>
+												<SelectContent>
+													{endDate
+														? getAvailableHours(endDate).map(hour => (
+																<SelectItem key={hour} value={String(hour)}>
+																	{String(hour).padStart(2, '0')}:00
+																</SelectItem>
+															))
+														: Array.from({ length: 24 }, (_, i) => (
+																<SelectItem key={i} value={String(i)}>
+																	{String(i).padStart(2, '0')}:00
+																</SelectItem>
+															))}
+												</SelectContent>
+											</Select>
 
-										<Select
-											value={endDate ? String(endDate.getMinutes()) : ''}
-											onValueChange={value => {
-												if (endDate) {
-													const updated = setMinutes(endDate, parseInt(value))
-													setEndDate(updated)
-												}
-											}}
-										>
-											<SelectTrigger className="w-[110px]">
-												<SelectValue placeholder="Minute" />
-											</SelectTrigger>
-											<SelectContent>
-												{endDate && isToday(endDate)
-													? getAvailableMinutes(endDate, endDate.getHours()).map(minute => (
-															<SelectItem key={minute} value={String(minute)}>
-																{String(minute).padStart(2, '0')}
-															</SelectItem>
-														))
-													: Array.from({ length: 12 }, (_, i) => i * 5).map(minute => (
-															<SelectItem key={minute} value={String(minute)}>
-																{String(minute).padStart(2, '0')}
-															</SelectItem>
-														))}
-											</SelectContent>
-										</Select>
+											<Select
+												value={endDate ? String(endDate.getMinutes()) : ''}
+												onValueChange={value => {
+													if (endDate) {
+														const updated = setMinutes(endDate, parseInt(value))
+														setEndDate(updated)
+													}
+												}}
+											>
+												<SelectTrigger className="w-[110px]">
+													<SelectValue placeholder="Minute" />
+												</SelectTrigger>
+												<SelectContent>
+													{endDate && isToday(endDate)
+														? getAvailableMinutes(endDate, endDate.getHours()).map(minute => (
+																<SelectItem key={minute} value={String(minute)}>
+																	{String(minute).padStart(2, '0')}
+																</SelectItem>
+															))
+														: Array.from({ length: 12 }, (_, i) => i * 5).map(minute => (
+																<SelectItem key={minute} value={String(minute)}>
+																	{String(minute).padStart(2, '0')}
+																</SelectItem>
+															))}
+												</SelectContent>
+											</Select>
+										</div>
 									</div>
 								</div>
-							</PopoverContent>
-						</Popover>
+							</DrawerContent>
+						</Drawer>
 					</div>
 
 					<Button
