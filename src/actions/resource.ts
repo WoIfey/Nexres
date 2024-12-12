@@ -12,7 +12,7 @@ export async function createResource(data: { name: string; description: string }
         })
 
         if (!session || !session.user || !session.user.id) {
-            throw new Error("Unauthorized")
+            return { success: false, error: "Unauthorized" }
         }
 
         const resource = await prisma.resource.create({
@@ -41,7 +41,7 @@ export async function getResources() {
         })
 
         if (!session || !session.user || !session.user.id) {
-            throw new Error("Unauthorized")
+            return { success: false, error: "Unauthorized" }
         }
 
         const resources = await prisma.resource.findMany({
@@ -71,7 +71,7 @@ export async function deleteResource(id: string) {
         })
 
         if (!session || !session.user || !session.user.id) {
-            throw new Error("Unauthorized")
+            return { success: false, error: "Unauthorized" }
         }
 
         await prisma.resource.delete({

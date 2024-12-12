@@ -1,23 +1,31 @@
 'use client'
 
 import { useState } from 'react'
-import { format } from 'date-fns'
+import { format, isSameDay } from 'date-fns'
 import { toast } from 'sonner'
 import { deleteBooking } from '@/actions/booking'
 import { Trash2 } from 'lucide-react'
 import { Button } from './ui/button'
 
-type Booking = {
+interface Booking {
 	id: number
-	date: Date
-	resource: {
-		id: string
+	date: string | Date
+	endDate: string | Date
+	resource?: {
 		name: string
 		description: string | null
+		id: string
+		userId: string
+		createdAt: Date
+		updatedAt: Date
 	} | null
 }
 
-export default function BookingsList({ bookings }: { bookings: Booking[] }) {
+interface Props {
+	bookings: Booking[]
+}
+
+export default function BookingsList({ bookings }: Props) {
 	const [isDeleting, setIsDeleting] = useState<number | null>(null)
 
 	const handleDelete = async (id: number) => {
@@ -47,7 +55,7 @@ export default function BookingsList({ bookings }: { bookings: Booking[] }) {
 
 	return (
 		<div className="space-y-4">
-			{bookings.map(booking => {
+			{bookings.map((booking: Booking) => {
 				const isPast = isPastBooking(booking.date)
 				return (
 					<div
@@ -57,9 +65,23 @@ export default function BookingsList({ bookings }: { bookings: Booking[] }) {
 						}`}
 					>
 						<div>
-							<p className="font-medium">{format(new Date(booking.date), 'PPP')}</p>
+							<p className="font-medium">
+								{format(new Date(booking.date), 'PPP')}
+								{!isSameDay(new Date(booking.date), new Date(booking.endDate)) && (
+									<>
+										{' - '}
+										{format(new Date(booking.endDate), 'PPP')}
+									</>
+								)}
+							</p>
 							<p className="text-sm text-muted-foreground">
 								{format(new Date(booking.date), 'p')}
+								{!isSameDay(new Date(booking.date), new Date(booking.endDate)) && (
+									<>
+										{' - '}
+										{format(new Date(booking.endDate), 'p')}
+									</>
+								)}
 							</p>
 							<p className="text-sm font-medium mt-1">{booking.resource?.name}</p>
 							<p className="text-xs text-muted-foreground">
@@ -71,9 +93,9 @@ export default function BookingsList({ bookings }: { bookings: Booking[] }) {
 							size="sm"
 							onClick={() => handleDelete(booking.id)}
 							disabled={isDeleting === booking.id}
-							className="text-destructive hover:text-destructive hover:bg-destructive/10"
+							className="text-destructive dark:text-red-500 hover:bg-destructive/10 hover:text-destructive/75 dark:hover:bg-red-500/10 dark:hover:text-red-400"
 						>
-							<Trash2 className="w-4 h-4" />
+							<Trash2 className="size-4" />
 							<span className="sr-only">Delete booking</span>
 						</Button>
 					</div>

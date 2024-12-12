@@ -1,5 +1,4 @@
 'use client'
-
 import { useState } from 'react'
 import { Button } from './ui/button'
 import {
@@ -46,7 +45,7 @@ export default function ResourceManager() {
 	return (
 		<Drawer open={isOpen} onOpenChange={setIsOpen}>
 			<DrawerTrigger asChild>
-				<Button variant="outline">Add Resource</Button>
+				<Button>Add Resource</Button>
 			</DrawerTrigger>
 			<DrawerContent>
 				<div className="mx-auto w-full max-w-sm">
@@ -59,7 +58,7 @@ export default function ResourceManager() {
 
 					<form onSubmit={handleSubmit} className="space-y-4 p-4 pb-10">
 						<div className="space-y-2">
-							<Label htmlFor="name">Name</Label>
+							<Label htmlFor="name">Resource Name</Label>
 							<Input
 								id="name"
 								value={name}
