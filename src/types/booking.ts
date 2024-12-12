@@ -1,5 +1,4 @@
-import { Resource } from './resource'
-import { User } from './auth'
+
 
 export type Booking = {
     id: number

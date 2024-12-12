@@ -1,4 +1,4 @@
-import { Booking } from './booking'
+
 
 export type Resource = {
     id: string

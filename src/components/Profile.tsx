@@ -2,9 +2,17 @@
 import { authClient } from '@/lib/auth-client'
 import { useRouter } from 'next/navigation'
 import { Button } from './ui/button'
-import { LogOut, User } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 
-export default function Profile({ session }: { session: any }) {
+interface Session {
+	user?: {
+		email: string
+		name: string
+		image?: string | null
+	}
+}
+
+export default function Profile({ session }: { session: Session | null }) {
 	const router = useRouter()
 	const handleSignOut = async () => {
 		await authClient.signOut()
