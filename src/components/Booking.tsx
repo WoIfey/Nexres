@@ -1,11 +1,6 @@
 'use client'
 import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 import { format, isToday, setHours, setMinutes } from 'date-fns'
 import { CalendarIcon, Clock, Trash2 } from 'lucide-react'
@@ -285,12 +280,12 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 													{startDate
 														? getAvailableHours(startDate).map(hour => (
 																<SelectItem key={hour} value={String(hour)}>
-																	{String(hour).padStart(2, '0')}:00
+																	{String(hour).padStart(2, '0')}
 																</SelectItem>
 															))
 														: Array.from({ length: 24 }, (_, i) => (
 																<SelectItem key={i} value={String(i)}>
-																	{String(i).padStart(2, '0')}:00
+																	{String(i).padStart(2, '0')}
 																</SelectItem>
 															))}
 												</SelectContent>
@@ -384,12 +379,12 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 													{endDate
 														? getAvailableHours(endDate).map(hour => (
 																<SelectItem key={hour} value={String(hour)}>
-																	{String(hour).padStart(2, '0')}:00
+																	{String(hour).padStart(2, '0')}
 																</SelectItem>
 															))
 														: Array.from({ length: 24 }, (_, i) => (
 																<SelectItem key={i} value={String(i)}>
-																	{String(i).padStart(2, '0')}:00
+																	{String(i).padStart(2, '0')}
 																</SelectItem>
 															))}
 												</SelectContent>
