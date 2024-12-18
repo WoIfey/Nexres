@@ -2,10 +2,10 @@
 import { useState, useTransition } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { authClient } from '@/lib/auth-client'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
+import { Loader2 } from 'lucide-react'
 
 export default function ForgotPassword({ onBack }: { onBack: () => void }) {
 	const [email, setEmail] = useState('')
@@ -38,21 +38,45 @@ export default function ForgotPassword({ onBack }: { onBack: () => void }) {
 	return (
 		<form onSubmit={handleSubmit} className="space-y-4">
 			<div className="space-y-2">
-				<Label htmlFor="reset-email">Email</Label>
-				<Input
-					id="reset-email"
-					type="email"
-					value={email}
-					onChange={e => setEmail(e.target.value)}
-					placeholder="your@email.com"
-					required
-					disabled={isPending}
-				/>
+				<div className="group relative">
+					<label
+						htmlFor="reset-email"
+						className="absolute start-1 top-0 z-10 block -translate-y-1/2 bg-background px-2 text-xs font-medium text-foreground group-has-[:disabled]:opacity-50"
+					>
+						Email
+					</label>
+					<div className="relative">
+						<Input
+							id="reset-email"
+							type="email"
+							placeholder=""
+							className="pe-16"
+							value={email}
+							maxLength={255}
+							onChange={e => setEmail(e.target.value)}
+							required
+							disabled={isPending}
+							aria-describedby="character-count"
+						/>
+						<div
+							id="character-count"
+							className="pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-3 text-xs tabular-nums text-muted-foreground peer-disabled:opacity-50"
+							aria-live="polite"
+							role="status"
+						>
+							{email.length}/{255}
+						</div>
+					</div>
+				</div>
 			</div>
 
 			<div className="flex flex-col gap-2">
 				<Button type="submit" disabled={isPending}>
-					{isPending ? 'Sending...' : 'Send reset link'}
+					{isPending ? (
+						<Loader2 className="size-4 animate-spin mr-2" />
+					) : (
+						'Send reset link'
+					)}
 				</Button>
 				<Button type="button" variant="ghost" onClick={onBack} disabled={isPending}>
 					Back to sign in

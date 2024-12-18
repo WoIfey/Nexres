@@ -4,15 +4,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from './ui/button'
 import { LogOut } from 'lucide-react'
 
-interface Session {
-	user?: {
-		email: string
-		name: string
-		image?: string | null
-	}
-}
-
-export default function Profile({ session }: { session: Session | null }) {
+export default function Profile({ session }: { session: Session }) {
 	const router = useRouter()
 	const handleSignOut = async () => {
 		await authClient.signOut()
@@ -25,7 +17,7 @@ export default function Profile({ session }: { session: Session | null }) {
 		<div className="flex items-center gap-4">
 			<div className="flex items-center gap-2">
 				<span className="text-sm font-medium hidden sm:inline">
-					{session.user.email}
+					{session?.user?.email}
 				</span>
 			</div>
 			<Button

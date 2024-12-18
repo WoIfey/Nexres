@@ -43,7 +43,7 @@ export default function ResourceManager() {
 			<PopoverContent className="w-80">
 				<div className="grid gap-4">
 					<div className="space-y-2">
-						<h4 className="font-medium leading-none">Create Resource</h4>
+						<h1 className="font-medium leading-none">Create Resource</h1>
 						<p className="text-sm text-muted-foreground">
 							Add a new resource that can be booked.
 						</p>
@@ -51,7 +51,9 @@ export default function ResourceManager() {
 
 					<form onSubmit={handleSubmit} className="space-y-4">
 						<div className="space-y-2">
-							<Label htmlFor="name">Resource Name</Label>
+							<Label htmlFor="name">
+								Resource Name <span className="text-red-500">*</span>
+							</Label>
 							<Input
 								id="name"
 								value={name}
