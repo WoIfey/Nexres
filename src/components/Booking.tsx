@@ -11,34 +11,12 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import ResourceManager from '@/components/ResourceManager'
 import { deleteResource } from '@/actions/resource'
 import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select'
-import {
 	Drawer,
 	DrawerContent,
 	DrawerHeader,
 	DrawerTitle,
 	DrawerTrigger,
 } from '@/components/ui/drawer'
-
-interface Booking {
-	date: string | Date
-	endDate: string | Date
-}
-
-interface Resource {
-	id: string
-	name: string
-	description: string | null
-	userId: string
-	createdAt: Date
-	updatedAt: Date
-	bookings?: Booking[]
-}
 
 const isTimeSlotBooked = (start: Date, end: Date, resource?: Resource) => {
 	if (!resource) return false
@@ -53,6 +31,36 @@ const isTimeSlotBooked = (start: Date, end: Date, resource?: Resource) => {
 			(start <= bookingStart && end >= bookingEnd)
 		)
 	})
+}
+
+function TimeSelector({
+	options,
+	selectedValue,
+	onSelect,
+}: {
+	options: TimeOption[]
+	selectedValue: number
+	onSelect: (value: number) => void
+}) {
+	return (
+		<ScrollArea className="h-[200px] w-[110px] rounded-md border">
+			<div className="p-2">
+				{options.map(option => (
+					<Button
+						key={option.value}
+						variant="ghost"
+						className={cn(
+							'w-full justify-center mb-1',
+							selectedValue === option.value && 'bg-primary text-primary-foreground'
+						)}
+						onClick={() => onSelect(option.value)}
+					>
+						{option.label}
+					</Button>
+				))}
+			</div>
+		</ScrollArea>
+	)
 }
 
 export default function Booking({ resources }: { resources: Resource[] }) {
@@ -70,12 +78,14 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 		return (
 			<div className="bg-card rounded-lg border shadow-sm">
 				<div className="p-6">
-					<h2 className="text-2xl font-semibold mb-6">Book an Appointment</h2>
+					<div className="flex justify-between items-center mb-4">
+						<h2 className="text-2xl font-semibold">Book an Appointment</h2>
+						<ResourceManager />
+					</div>
 					<div className="space-y-4">
 						<p className="text-muted-foreground">
 							No resources available for booking.
 						</p>
-						<ResourceManager />
 					</div>
 				</div>
 			</div>
@@ -175,7 +185,7 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 		<div className="bg-card rounded-lg border shadow-sm">
 			<div className="p-6">
 				<div className="flex justify-between items-center mb-4">
-					<h2 className="text-2xl font-semibold">Book an Appointment</h2>
+					<h2 className="text-2xl font-semibold">Book Appointment</h2>
 					<ResourceManager />
 				</div>
 
@@ -225,7 +235,9 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 					</div>
 
 					<div>
-						<label className="text-sm font-medium mb-2 block">Start Date</label>
+						<label className="text-sm font-medium mb-2 block">
+							Start Date <span className="text-red-500">*</span>
+						</label>
 						<Drawer open={isStartDrawerOpen} onOpenChange={setIsStartDrawerOpen}>
 							<DrawerTrigger asChild>
 								<Button
@@ -262,65 +274,56 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 										disabled={{ before: new Date() }}
 									/>
 
-									<div className="flex flex-col items-center gap-4 pt-4 border-t w-full">
-										<div className="flex items-center gap-2">
-											<Select
-												value={startDate ? String(startDate.getHours()) : ''}
-												onValueChange={value => {
-													if (startDate) {
-														const updated = setHours(startDate, parseInt(value))
-														setStartDate(updated)
-													}
-												}}
-											>
-												<SelectTrigger className="w-[110px]">
-													<SelectValue placeholder="Hour" />
-												</SelectTrigger>
-												<SelectContent>
-													{startDate
-														? getAvailableHours(startDate).map(hour => (
-																<SelectItem key={hour} value={String(hour)}>
-																	{String(hour).padStart(2, '0')}
-																</SelectItem>
-															))
-														: Array.from({ length: 24 }, (_, i) => (
-																<SelectItem key={i} value={String(i)}>
-																	{String(i).padStart(2, '0')}
-																</SelectItem>
-															))}
-												</SelectContent>
-											</Select>
+									{startDate && (
+										<>
+											<div className="flex flex-col items-center gap-4 pt-4 border-t w-full">
+												<div className="flex items-center gap-2">
+													<div>
+														<p className="text-sm font-medium mb-2">Hour</p>
+														<TimeSelector
+															options={getAvailableHours(startDate).map(hour => ({
+																value: hour,
+																label: String(hour).padStart(2, '0'),
+															}))}
+															selectedValue={startDate.getHours()}
+															onSelect={hour => {
+																setStartDate(setHours(startDate, hour))
+															}}
+														/>
+													</div>
 
-											<Select
-												value={startDate ? String(startDate.getMinutes()) : ''}
-												onValueChange={value => {
-													if (startDate) {
-														const updated = setMinutes(startDate, parseInt(value))
-														setStartDate(updated)
-													}
-												}}
+													<div>
+														<p className="text-sm font-medium mb-2">Minute</p>
+														<TimeSelector
+															options={
+																isToday(startDate)
+																	? getAvailableMinutes(startDate, startDate.getHours()).map(
+																			minute => ({
+																				value: minute,
+																				label: String(minute).padStart(2, '0'),
+																			})
+																		)
+																	: Array.from({ length: 12 }, (_, i) => ({
+																			value: i * 5,
+																			label: String(i * 5).padStart(2, '0'),
+																		}))
+															}
+															selectedValue={startDate.getMinutes()}
+															onSelect={minute => {
+																setStartDate(setMinutes(startDate, minute))
+															}}
+														/>
+													</div>
+												</div>
+											</div>
+											<Button
+												className="w-1/6 mt-4"
+												onClick={() => setIsStartDrawerOpen(false)}
 											>
-												<SelectTrigger className="w-[110px]">
-													<SelectValue placeholder="Minute" />
-												</SelectTrigger>
-												<SelectContent>
-													{startDate && isToday(startDate)
-														? getAvailableMinutes(startDate, startDate.getHours()).map(
-																minute => (
-																	<SelectItem key={minute} value={String(minute)}>
-																		{String(minute).padStart(2, '0')}
-																	</SelectItem>
-																)
-															)
-														: Array.from({ length: 12 }, (_, i) => i * 5).map(minute => (
-																<SelectItem key={minute} value={String(minute)}>
-																	{String(minute).padStart(2, '0')}
-																</SelectItem>
-															))}
-												</SelectContent>
-											</Select>
-										</div>
-									</div>
+												Apply
+											</Button>
+										</>
+									)}
 								</div>
 							</DrawerContent>
 						</Drawer>
@@ -361,63 +364,56 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 										}}
 									/>
 
-									<div className="flex flex-col items-center gap-4 pt-4 border-t w-full">
-										<div className="flex items-center gap-2">
-											<Select
-												value={endDate ? String(endDate.getHours()) : ''}
-												onValueChange={value => {
-													if (endDate) {
-														const updated = setHours(endDate, parseInt(value))
-														setEndDate(updated)
-													}
-												}}
-											>
-												<SelectTrigger className="w-[110px]">
-													<SelectValue placeholder="Hour" />
-												</SelectTrigger>
-												<SelectContent>
-													{endDate
-														? getAvailableHours(endDate).map(hour => (
-																<SelectItem key={hour} value={String(hour)}>
-																	{String(hour).padStart(2, '0')}
-																</SelectItem>
-															))
-														: Array.from({ length: 24 }, (_, i) => (
-																<SelectItem key={i} value={String(i)}>
-																	{String(i).padStart(2, '0')}
-																</SelectItem>
-															))}
-												</SelectContent>
-											</Select>
+									{endDate && (
+										<>
+											<div className="flex flex-col items-center gap-4 pt-4 border-t w-full">
+												<div className="flex items-center gap-2">
+													<div>
+														<p className="text-sm font-medium mb-2">Hour</p>
+														<TimeSelector
+															options={getAvailableHours(endDate).map(hour => ({
+																value: hour,
+																label: String(hour).padStart(2, '0'),
+															}))}
+															selectedValue={endDate.getHours()}
+															onSelect={hour => {
+																setEndDate(setHours(endDate, hour))
+															}}
+														/>
+													</div>
 
-											<Select
-												value={endDate ? String(endDate.getMinutes()) : ''}
-												onValueChange={value => {
-													if (endDate) {
-														const updated = setMinutes(endDate, parseInt(value))
-														setEndDate(updated)
-													}
-												}}
+													<div>
+														<p className="text-sm font-medium mb-2">Minute</p>
+														<TimeSelector
+															options={
+																isToday(endDate)
+																	? getAvailableMinutes(endDate, endDate.getHours()).map(
+																			minute => ({
+																				value: minute,
+																				label: String(minute).padStart(2, '0'),
+																			})
+																		)
+																	: Array.from({ length: 12 }, (_, i) => ({
+																			value: i * 5,
+																			label: String(i * 5).padStart(2, '0'),
+																		}))
+															}
+															selectedValue={endDate.getMinutes()}
+															onSelect={minute => {
+																setEndDate(setMinutes(endDate, minute))
+															}}
+														/>
+													</div>
+												</div>
+											</div>
+											<Button
+												className="w-1/6 mt-4"
+												onClick={() => setIsEndDrawerOpen(false)}
 											>
-												<SelectTrigger className="w-[110px]">
-													<SelectValue placeholder="Minute" />
-												</SelectTrigger>
-												<SelectContent>
-													{endDate && isToday(endDate)
-														? getAvailableMinutes(endDate, endDate.getHours()).map(minute => (
-																<SelectItem key={minute} value={String(minute)}>
-																	{String(minute).padStart(2, '0')}
-																</SelectItem>
-															))
-														: Array.from({ length: 12 }, (_, i) => i * 5).map(minute => (
-																<SelectItem key={minute} value={String(minute)}>
-																	{String(minute).padStart(2, '0')}
-																</SelectItem>
-															))}
-												</SelectContent>
-											</Select>
-										</div>
-									</div>
+												Apply
+											</Button>
+										</>
+									)}
 								</div>
 							</DrawerContent>
 						</Drawer>

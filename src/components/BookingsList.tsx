@@ -7,25 +7,7 @@ import { deleteBooking } from '@/actions/booking'
 import { Trash2 } from 'lucide-react'
 import { Button } from './ui/button'
 
-interface Booking {
-	id: number
-	date: string | Date
-	endDate: string | Date
-	resource?: {
-		name: string
-		description: string | null
-		id: string
-		userId: string
-		createdAt: Date
-		updatedAt: Date
-	} | null
-}
-
-interface Props {
-	bookings: Booking[]
-}
-
-export default function BookingsList({ bookings }: Props) {
+export default function BookingsList({ bookings }: { bookings: Booking[] }) {
 	const [isDeleting, setIsDeleting] = useState<number | null>(null)
 
 	const handleDelete = async (id: number) => {
@@ -50,7 +32,11 @@ export default function BookingsList({ bookings }: Props) {
 	}
 
 	if (!bookings.length) {
-		return <div className="text-sm text-muted-foreground">No bookings found</div>
+		return (
+			<div className="space-y-4">
+				<p className="text-muted-foreground">No bookings found.</p>
+			</div>
+		)
 	}
 
 	return (
