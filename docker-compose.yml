@@ -7,7 +7,7 @@ services:
   volumes:
    - pgdata:/var/lib/postgresql/data
   environment:
-   - POSTGRES_PASSWORD=${DB_PASSWORD}
+   - POSTGRES_PASSWORD=password
 
 volumes:
  pgdata:

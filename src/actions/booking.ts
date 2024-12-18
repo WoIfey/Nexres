@@ -5,21 +5,30 @@ import prisma from "@/lib/prisma"
 import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 
-export async function createBooking({ date, resourceId }: { date: Date; resourceId: string }) {
+export async function createBooking({
+    startDate,
+    endDate,
+    resourceId
+}: {
+    startDate: Date
+    endDate: Date
+    resourceId: string
+}) {
     try {
         const session = await auth.api.getSession({
             headers: await headers(),
         })
 
         if (!session || !session.user || !session.user.id) {
-            throw new Error("Unauthorized")
+            return { success: false, error: "Unauthorized" }
         }
 
         const booking = await prisma.booking.create({
             data: {
-                userId: session.user.id,
-                date: date,
+                date: startDate,
+                endDate: endDate,
                 resourceId: resourceId,
+                userId: session.user.id,
             },
         })
 
@@ -38,7 +47,7 @@ export async function getBookings() {
         })
 
         if (!session || !session.user || !session.user.id) {
-            throw new Error("Unauthorized")
+            return []
         }
 
         const bookings = await prisma.booking.findMany({
@@ -67,7 +76,7 @@ export async function deleteBooking(id: number) {
         })
 
         if (!session || !session.user || !session.user.id) {
-            throw new Error("Unauthorized")
+            return { success: false, error: "Unauthorized" }
         }
 
         await prisma.booking.delete({

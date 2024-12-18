@@ -1,4 +1,4 @@
-import User from '@/components/User'
+import Profile from '@/components/Profile'
 import SignIn from '@/components/Sign-in'
 import Booking from '@/components/Booking'
 import BookingsList from '@/components/BookingsList'
@@ -6,6 +6,7 @@ import { auth } from '@/lib/auth'
 import { headers } from 'next/headers'
 import { getBookings } from '@/actions/booking'
 import { getResources } from '@/actions/resource'
+import Footer from '@/components/Footer'
 
 export default async function Home() {
 	const session = await auth.api.getSession({
@@ -13,20 +14,21 @@ export default async function Home() {
 	})
 
 	const bookings = await getBookings()
-	const resources = await getResources()
+	const resourcesResult = await getResources()
+	const resources = 'success' in resourcesResult ? [] : resourcesResult
 
 	return (
-		<main className="min-h-dvh bg-background">
-			<div className="container mx-auto px-4 py-6">
+		<main className="min-h-dvh bg-background flex flex-col">
+			<div className="container mx-auto px-4 py-6 flex-grow">
 				<header className="flex justify-between items-center mb-8">
 					<div className="flex items-center gap-4">
-						<h1 className="text-2xl font-bold">Booking</h1>
+						<h1 className="text-2xl font-bold">Nexres</h1>
 					</div>
-					<User session={session} />
+					<Profile session={session} />
 				</header>
 
 				{session?.user ? (
-					<div className="grid md:grid-cols-2 gap-6">
+					<div className="grid lg:grid-cols-2 gap-6">
 						<div>
 							<Booking resources={resources} />
 						</div>
@@ -40,14 +42,15 @@ export default async function Home() {
 						</div>
 					</div>
 				) : (
-					<div className="text-center">
+					<div>
 						<p className="text-muted-foreground mb-4">
-							Please sign in to make a booking
+							Start managing your resources with Nexres!
 						</p>
 						<SignIn />
 					</div>
 				)}
 			</div>
+			<Footer />
 		</main>
 	)
 }

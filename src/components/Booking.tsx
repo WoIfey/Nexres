@@ -1,75 +1,67 @@
 'use client'
 import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
-import { format } from 'date-fns'
+import { format, isToday, setHours, setMinutes } from 'date-fns'
 import { CalendarIcon, Clock, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { createBooking } from '@/actions/booking'
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import ResourceManager from '@/components/ResourceManager'
 import { deleteResource } from '@/actions/resource'
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select'
+import {
+	Drawer,
+	DrawerContent,
+	DrawerHeader,
+	DrawerTitle,
+	DrawerTrigger,
+} from '@/components/ui/drawer'
 
-type Resource = {
+interface Booking {
+	date: string | Date
+	endDate: string | Date
+}
+
+interface Resource {
 	id: string
 	name: string
 	description: string | null
-	bookings?: {
-		date: Date
-		resourceId: string
-	}[]
+	userId: string
+	createdAt: Date
+	updatedAt: Date
+	bookings?: Booking[]
 }
 
-type BookingProps = {
-	resources: Resource[]
-}
-
-const isTimeSlotBooked = (dateTime: Date, resource?: Resource) => {
+const isTimeSlotBooked = (start: Date, end: Date, resource?: Resource) => {
 	if (!resource) return false
 
-	return resource.bookings?.some(booking => {
-		const bookingDate = new Date(booking.date)
+	return resource.bookings?.some((booking: Booking) => {
+		const bookingStart = new Date(booking.date)
+		const bookingEnd = new Date(booking.endDate)
+
 		return (
-			bookingDate.getFullYear() === dateTime.getFullYear() &&
-			bookingDate.getMonth() === dateTime.getMonth() &&
-			bookingDate.getDate() === dateTime.getDate() &&
-			bookingDate.getHours() === dateTime.getHours() &&
-			bookingDate.getMinutes() === dateTime.getMinutes()
+			(start >= bookingStart && start < bookingEnd) ||
+			(end > bookingStart && end <= bookingEnd) ||
+			(start <= bookingStart && end >= bookingEnd)
 		)
 	})
 }
 
-const roundToNextFiveMinutes = (date: Date): Date => {
-	const newDate = new Date(date)
-	const nextMinute = Math.ceil(newDate.getMinutes() / 5) * 5
-
-	if (nextMinute >= 60) {
-		newDate.setHours(newDate.getHours() + 1)
-		newDate.setMinutes(0)
-	} else {
-		newDate.setMinutes(nextMinute)
-	}
-
-	if (newDate.getHours() >= 24) {
-		newDate.setDate(newDate.getDate() + 1)
-		newDate.setHours(0)
-		newDate.setMinutes(0)
-	}
-
-	return newDate
-}
-
-export default function Booking({ resources }: BookingProps) {
-	const [date, setDate] = useState<Date>()
+export default function Booking({ resources }: { resources: Resource[] }) {
+	const [startDate, setStartDate] = useState<Date | undefined>()
+	const [endDate, setEndDate] = useState<Date | undefined>()
 	const [isLoading, setIsLoading] = useState(false)
 	const [selectedResource, setSelectedResource] = useState<string>()
-	const [isOpen, setIsOpen] = useState(false)
+	const [isStartDrawerOpen, setIsStartDrawerOpen] = useState(false)
+	const [isEndDrawerOpen, setIsEndDrawerOpen] = useState(false)
 	const [isDeletingResource, setIsDeletingResource] = useState<string | null>(
 		null
 	)
@@ -90,84 +82,40 @@ export default function Booking({ resources }: BookingProps) {
 		)
 	}
 
-	const hours = Array.from({ length: 24 }, (_, i) => i)
-
-	const handleDateSelect = (selectedDate: Date | undefined) => {
-		if (!selectedDate) return
-
-		const now = new Date()
-		const newDate = new Date(selectedDate)
-
-		if (newDate.toDateString() === now.toDateString()) {
-			const roundedDate = roundToNextFiveMinutes(now)
-			newDate.setHours(roundedDate.getHours())
-			newDate.setMinutes(roundedDate.getMinutes())
-		} else {
-			newDate.setHours(0)
-			newDate.setMinutes(0)
+	const handleBooking = async () => {
+		if (!startDate || !selectedResource) {
+			toast.error('Please select start date and resource')
+			return
 		}
 
-		setDate(newDate)
-	}
+		const effectiveEndDate = endDate || new Date(startDate)
 
-	const handleTimeChange = (type: 'hour' | 'minute', value: string) => {
-		if (!date) return
-
-		const newDate = new Date(date.getTime())
-		const parsedValue = parseInt(value)
-
-		if (type === 'hour') {
-			newDate.setHours(parsedValue)
-		} else {
-			newDate.setMinutes(parsedValue)
+		if (endDate && endDate <= startDate) {
+			toast.error('End date must be after start date')
+			return
 		}
 
 		const selectedResourceObj = resources.find(r => r.id === selectedResource)
-
-		if (!isTimeSlotBooked(newDate, selectedResourceObj)) {
-			setDate(newDate)
-		} else {
+		if (isTimeSlotBooked(startDate, effectiveEndDate, selectedResourceObj)) {
 			toast.error('This time slot is already booked')
+			return
 		}
-	}
-
-	const isHourDisabled = (hour: number) => {
-		const now = new Date()
-		return date?.toDateString() === now.toDateString() && hour < now.getHours()
-	}
-
-	const isMinuteDisabled = (dateTime: Date) => {
-		const now = new Date()
-		if (dateTime.toDateString() !== now.toDateString()) return false
-		if (dateTime.getHours() > now.getHours()) return false
-		return (
-			dateTime.getHours() === now.getHours() &&
-			dateTime.getMinutes() <= now.getMinutes()
-		)
-	}
-
-	const disabledDates = {
-		before: new Date(),
-	}
-
-	const handleBooking = async () => {
-		if (!date || !selectedResource) return
 
 		setIsLoading(true)
-		const bookingDateTime = new Date(date)
-
 		try {
 			const result = await createBooking({
-				date: bookingDateTime,
+				startDate,
+				endDate: effectiveEndDate,
 				resourceId: selectedResource,
 			})
 
 			if (result.success) {
 				toast.success('Booking created successfully')
-				setDate(undefined)
+				setStartDate(undefined)
+				setEndDate(undefined)
 				setSelectedResource(undefined)
 			} else {
-				toast.error(result.error)
+				toast.error(result.error || 'Failed to create booking')
 			}
 		} catch (err) {
 			console.error('Booking error:', err)
@@ -187,7 +135,8 @@ export default function Booking({ resources }: BookingProps) {
 				toast.success('Resource deleted successfully')
 				if (selectedResource === id) {
 					setSelectedResource(undefined)
-					setDate(undefined)
+					setStartDate(undefined)
+					setEndDate(undefined)
 				}
 			} else {
 				toast.error(result.error)
@@ -200,6 +149,28 @@ export default function Booking({ resources }: BookingProps) {
 		}
 	}
 
+	const getAvailableHours = (date: Date): number[] => {
+		const now = new Date()
+		if (isToday(date)) {
+			const currentHour = now.getHours()
+			return Array.from({ length: 24 - currentHour }, (_, i) => currentHour + i)
+		}
+		return Array.from({ length: 24 }, (_, i) => i)
+	}
+
+	const getAvailableMinutes = (date: Date, hour: number): number[] => {
+		const now = new Date()
+		if (isToday(date) && hour === now.getHours()) {
+			const currentMinutes = now.getMinutes()
+			const nextFive = Math.ceil(currentMinutes / 5) * 5
+			return Array.from(
+				{ length: 12 - Math.floor(nextFive / 5) },
+				(_, i) => (nextFive + i * 5) % 60
+			)
+		}
+		return Array.from({ length: 12 }, (_, i) => i * 5)
+	}
+
 	return (
 		<div className="bg-card rounded-lg border shadow-sm">
 			<div className="p-6">
@@ -210,7 +181,7 @@ export default function Booking({ resources }: BookingProps) {
 
 				<div className="space-y-6">
 					<div>
-						<label className="text-sm font-medium mb-2 block">Select Resource</label>
+						<label className="text-sm font-medium mb-2 block">Resources</label>
 						<ScrollArea className="h-[200px] w-full rounded-md border">
 							<div className="p-4">
 								{resources.map((resource, index) => (
@@ -236,18 +207,16 @@ export default function Booking({ resources }: BookingProps) {
 												<p className="font-medium">{resource.name}</p>
 												<p className="text-sm opacity-90">{resource.description}</p>
 											</div>
-											<Button
-												variant="ghost"
-												size="sm"
+											<div
 												onClick={e => {
 													e.stopPropagation()
 													handleDeleteResource(resource.id)
 												}}
-												className="text-destructive hover:text-destructive hover:bg-destructive/10"
+												className="text-destructive dark:text-red-500 hover:bg-destructive/10 hover:text-destructive/75 dark:hover:bg-red-500/10 dark:hover:text-red-400"
 											>
-												<Trash2 className="w-4 h-4" />
+												<Trash2 className="size-4" />
 												<span className="sr-only">Delete resource</span>
-											</Button>
+											</div>
 										</div>
 									</Button>
 								))}
@@ -255,116 +224,237 @@ export default function Booking({ resources }: BookingProps) {
 						</ScrollArea>
 					</div>
 
-					{selectedResource && (
-						<div>
-							<label className="text-sm font-medium mb-2 block">
-								Select Date and Time
-							</label>
-							<Popover open={isOpen} onOpenChange={setIsOpen}>
-								<PopoverTrigger asChild>
-									<Button
-										variant="outline"
-										className={cn(
-											'w-full justify-start text-left font-normal',
-											!date && 'text-muted-foreground'
-										)}
-									>
-										<CalendarIcon className="mr-2 h-4 w-4" />
-										{date ? (
-											format(date, 'MM/dd/yyyy HH:mm')
-										) : (
-											<span>MM/DD/YYYY HH:mm</span>
-										)}
-									</Button>
-								</PopoverTrigger>
-								<PopoverContent className="w-auto p-0">
-									<div className="sm:flex">
-										<Calendar
-											mode="single"
-											selected={date}
-											onSelect={handleDateSelect}
-											disabled={disabledDates}
-											initialFocus
-										/>
-										<div className="flex flex-col sm:flex-row sm:h-[300px] divide-y sm:divide-y-0 sm:divide-x">
-											<ScrollArea className="w-64 sm:w-auto">
-												<div className="flex sm:flex-col p-2">
-													{hours.map(hour => {
-														const hourDate = date ? new Date(date.getTime()) : null
-														if (hourDate) {
-															hourDate.setHours(hour)
-															hourDate.setMinutes(0)
-														}
-														const isBooked = hourDate ? isTimeSlotBooked(hourDate) : false
-														const isDisabled = isHourDisabled(hour)
+					<div>
+						<label className="text-sm font-medium mb-2 block">Start Date</label>
+						<Drawer open={isStartDrawerOpen} onOpenChange={setIsStartDrawerOpen}>
+							<DrawerTrigger asChild>
+								<Button
+									variant="outline"
+									className={cn(
+										'w-full justify-start text-left font-normal',
+										!startDate && 'text-muted-foreground'
+									)}
+									disabled={!selectedResource}
+								>
+									<CalendarIcon className="mr-2 h-4 w-4" />
+									{startDate
+										? format(startDate, 'MM/dd/yyyy HH:mm')
+										: 'Select start date'}
+								</Button>
+							</DrawerTrigger>
+							<DrawerContent>
+								<DrawerHeader>
+									<DrawerTitle className="text-center">Select start date</DrawerTitle>
+								</DrawerHeader>
+								<div className="p-4 space-y-4 flex flex-col items-center">
+									<Calendar
+										mode="single"
+										selected={startDate}
+										onSelect={date => {
+											if (date) {
+												const newDate = roundToNextFiveMinutes(date)
+												setStartDate(newDate)
+												if (endDate && endDate <= newDate) {
+													setEndDate(undefined)
+												}
+											}
+										}}
+										disabled={{ before: new Date() }}
+									/>
 
-														return (
-															<Button
-																key={hour}
-																size="icon"
-																variant={date && date.getHours() === hour ? 'default' : 'ghost'}
-																className="sm:w-full shrink-0 aspect-square"
-																onClick={() => handleTimeChange('hour', hour.toString())}
-																disabled={isBooked || isDisabled}
-															>
-																{hour}
-															</Button>
-														)
-													})}
-												</div>
-												<ScrollBar orientation="horizontal" className="sm:hidden" />
-											</ScrollArea>
-											<ScrollArea className="w-64 sm:w-auto">
-												<div className="flex sm:flex-col p-2">
-													{Array.from({ length: 12 }, (_, i) => i * 5).map(minute => {
-														const minuteDate = date ? new Date(date.getTime()) : null
-														if (minuteDate) {
-															minuteDate.setMinutes(minute)
-														}
-														const isBooked = minuteDate ? isTimeSlotBooked(minuteDate) : false
-														const isDisabled = minuteDate
-															? isMinuteDisabled(minuteDate)
-															: false
+									<div className="flex flex-col items-center gap-4 pt-4 border-t w-full">
+										<div className="flex items-center gap-2">
+											<Select
+												value={startDate ? String(startDate.getHours()) : ''}
+												onValueChange={value => {
+													if (startDate) {
+														const updated = setHours(startDate, parseInt(value))
+														setStartDate(updated)
+													}
+												}}
+											>
+												<SelectTrigger className="w-[110px]">
+													<SelectValue placeholder="Hour" />
+												</SelectTrigger>
+												<SelectContent>
+													{startDate
+														? getAvailableHours(startDate).map(hour => (
+																<SelectItem key={hour} value={String(hour)}>
+																	{String(hour).padStart(2, '0')}
+																</SelectItem>
+															))
+														: Array.from({ length: 24 }, (_, i) => (
+																<SelectItem key={i} value={String(i)}>
+																	{String(i).padStart(2, '0')}
+																</SelectItem>
+															))}
+												</SelectContent>
+											</Select>
 
-														return (
-															<Button
-																key={minute}
-																size="icon"
-																variant={
-																	date && date.getMinutes() === minute ? 'default' : 'ghost'
-																}
-																className="sm:w-full shrink-0 aspect-square"
-																onClick={() => handleTimeChange('minute', minute.toString())}
-																disabled={isBooked || isDisabled}
-															>
-																{minute.toString().padStart(2, '0')}
-															</Button>
-														)
-													})}
-												</div>
-												<ScrollBar orientation="horizontal" className="sm:hidden" />
-											</ScrollArea>
+											<Select
+												value={startDate ? String(startDate.getMinutes()) : ''}
+												onValueChange={value => {
+													if (startDate) {
+														const updated = setMinutes(startDate, parseInt(value))
+														setStartDate(updated)
+													}
+												}}
+											>
+												<SelectTrigger className="w-[110px]">
+													<SelectValue placeholder="Minute" />
+												</SelectTrigger>
+												<SelectContent>
+													{startDate && isToday(startDate)
+														? getAvailableMinutes(startDate, startDate.getHours()).map(
+																minute => (
+																	<SelectItem key={minute} value={String(minute)}>
+																		{String(minute).padStart(2, '0')}
+																	</SelectItem>
+																)
+															)
+														: Array.from({ length: 12 }, (_, i) => i * 5).map(minute => (
+																<SelectItem key={minute} value={String(minute)}>
+																	{String(minute).padStart(2, '0')}
+																</SelectItem>
+															))}
+												</SelectContent>
+											</Select>
 										</div>
 									</div>
-								</PopoverContent>
-							</Popover>
-						</div>
-					)}
-
-					{date && selectedResource && (
-						<Button onClick={handleBooking} className="w-full" disabled={isLoading}>
-							{isLoading ? (
-								<div className="flex items-center justify-center">
-									<Clock className="mr-2 h-4 w-4 animate-spin" />
-									<span>Processing...</span>
 								</div>
-							) : (
-								'Book Appointment'
-							)}
-						</Button>
-					)}
+							</DrawerContent>
+						</Drawer>
+					</div>
+
+					<div>
+						<label className="text-sm font-medium mb-2 block">End Date</label>
+						<Drawer open={isEndDrawerOpen} onOpenChange={setIsEndDrawerOpen}>
+							<DrawerTrigger asChild>
+								<Button
+									variant="outline"
+									className={cn(
+										'w-full justify-start text-left font-normal',
+										!endDate && 'text-muted-foreground'
+									)}
+									disabled={!startDate}
+								>
+									<CalendarIcon className="mr-2 h-4 w-4" />
+									{endDate ? format(endDate, 'MM/dd/yyyy HH:mm') : 'Select end date'}
+								</Button>
+							</DrawerTrigger>
+							<DrawerContent>
+								<DrawerHeader>
+									<DrawerTitle className="text-center">Select end date</DrawerTitle>
+								</DrawerHeader>
+								<div className="p-4 space-y-4 flex flex-col items-center">
+									<Calendar
+										mode="single"
+										selected={endDate}
+										onSelect={date => {
+											if (date) {
+												const newDate = roundToNextFiveMinutes(date)
+												setEndDate(newDate)
+											}
+										}}
+										disabled={{
+											before: startDate ? addMinutes(startDate, 5) : new Date(),
+										}}
+									/>
+
+									<div className="flex flex-col items-center gap-4 pt-4 border-t w-full">
+										<div className="flex items-center gap-2">
+											<Select
+												value={endDate ? String(endDate.getHours()) : ''}
+												onValueChange={value => {
+													if (endDate) {
+														const updated = setHours(endDate, parseInt(value))
+														setEndDate(updated)
+													}
+												}}
+											>
+												<SelectTrigger className="w-[110px]">
+													<SelectValue placeholder="Hour" />
+												</SelectTrigger>
+												<SelectContent>
+													{endDate
+														? getAvailableHours(endDate).map(hour => (
+																<SelectItem key={hour} value={String(hour)}>
+																	{String(hour).padStart(2, '0')}
+																</SelectItem>
+															))
+														: Array.from({ length: 24 }, (_, i) => (
+																<SelectItem key={i} value={String(i)}>
+																	{String(i).padStart(2, '0')}
+																</SelectItem>
+															))}
+												</SelectContent>
+											</Select>
+
+											<Select
+												value={endDate ? String(endDate.getMinutes()) : ''}
+												onValueChange={value => {
+													if (endDate) {
+														const updated = setMinutes(endDate, parseInt(value))
+														setEndDate(updated)
+													}
+												}}
+											>
+												<SelectTrigger className="w-[110px]">
+													<SelectValue placeholder="Minute" />
+												</SelectTrigger>
+												<SelectContent>
+													{endDate && isToday(endDate)
+														? getAvailableMinutes(endDate, endDate.getHours()).map(minute => (
+																<SelectItem key={minute} value={String(minute)}>
+																	{String(minute).padStart(2, '0')}
+																</SelectItem>
+															))
+														: Array.from({ length: 12 }, (_, i) => i * 5).map(minute => (
+																<SelectItem key={minute} value={String(minute)}>
+																	{String(minute).padStart(2, '0')}
+																</SelectItem>
+															))}
+												</SelectContent>
+											</Select>
+										</div>
+									</div>
+								</div>
+							</DrawerContent>
+						</Drawer>
+					</div>
+
+					<Button
+						onClick={handleBooking}
+						className="w-full"
+						disabled={isLoading || !startDate}
+					>
+						{isLoading ? (
+							<div className="flex items-center justify-center">
+								<Clock className="mr-2 h-4 w-4 animate-spin" />
+								<span>Processing...</span>
+							</div>
+						) : (
+							'Book Appointment'
+						)}
+					</Button>
 				</div>
 			</div>
 		</div>
 	)
+}
+
+function roundToNextFiveMinutes(date: Date): Date {
+	const newDate = new Date(date)
+	const minutes = newDate.getMinutes()
+	const remainder = minutes % 5
+	if (remainder !== 0) {
+		newDate.setMinutes(minutes + (5 - remainder))
+	}
+	newDate.setSeconds(0)
+	newDate.setMilliseconds(0)
+	return newDate
+}
+
+function addMinutes(date: Date, minutes: number): Date {
+	return new Date(date.getTime() + minutes * 60000)
 }
