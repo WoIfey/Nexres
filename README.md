@@ -1,6 +1,6 @@
 # Nexres
 
-Next.js app for booking resources.
+Make appointments for different resources.
 
 ## Setup
 

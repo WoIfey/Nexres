@@ -11,6 +11,7 @@ interface Resource {
     createdAt: Date
     updatedAt: Date
     bookings?: Booking[]
+    isEditing?: boolean
 }
 
 interface Booking {

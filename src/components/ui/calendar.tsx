@@ -34,7 +34,7 @@ function Calendar({
 					buttonVariants({ variant: 'outline' }),
 					'h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 z-10'
 				),
-				weeks: 'w-full border-collapse space-y-',
+				weeks: 'w-full border-collapse space-y-1',
 				weekdays: 'flex',
 				weekday: 'text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]',
 				week: 'flex w-full mt-2',
