@@ -8,6 +8,7 @@ import ForgotPassword from './ForgotPassword'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { Loader2 } from 'lucide-react'
+import { Turnstile } from '@marsidev/react-turnstile'
 
 const signInSchema = z.object({
 	email: z.string().email('Please enter a valid email address'),
@@ -170,6 +171,10 @@ export default function SignIn() {
 						>
 							Forgot password?
 						</Button>
+
+						<Turnstile
+							siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY as string}
+						/>
 
 						<Button type="submit" className="w-full" disabled={isPending}>
 							{isPending ? (

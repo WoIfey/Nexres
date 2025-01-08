@@ -172,6 +172,16 @@ export default function BookingsList({ bookings }: { bookings: Booking[] }) {
 											Cancel
 										</Button>
 									</div>
+									<Button
+										variant="ghost"
+										size="sm"
+										onClick={() => handleDelete(booking.id)}
+										disabled={isDeleting === booking.id}
+										className="text-destructive dark:text-red-500 hover:bg-destructive/10 hover:text-destructive/75 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+									>
+										<Trash2 className="size-4" />
+										<span className="sr-only">Delete booking</span>
+									</Button>
 								</div>
 							) : null}
 						</div>
