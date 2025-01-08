@@ -25,7 +25,7 @@ export async function createBooking({
 
         const booking = await prisma.booking.create({
             data: {
-                date: startDate,
+                startDate: startDate,
                 endDate: endDate,
                 resourceId: resourceId,
                 userId: session.user.id,
@@ -55,7 +55,7 @@ export async function getBookings() {
                 userId: session.user.id
             },
             orderBy: {
-                date: 'asc'
+                startDate: 'asc'
             },
             include: {
                 resource: true
@@ -110,7 +110,7 @@ export async function updateBooking(id: number, data: { startDate: Date, endDate
                 userId: session.user.id
             },
             data: {
-                date: data.startDate,
+                startDate: data.startDate,
                 endDate: data.endDate
             }
         })

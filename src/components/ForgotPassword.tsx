@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { authClient } from '@/lib/auth-client'
 import { toast } from 'sonner'
-import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 import { Turnstile } from '@marsidev/react-turnstile'
 
@@ -12,7 +11,6 @@ export default function ForgotPassword({ onBack }: { onBack: () => void }) {
 	const [email, setEmail] = useState('')
 	const [isPending, startTransition] = useTransition()
 	const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
-	const router = useRouter()
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()

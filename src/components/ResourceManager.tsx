@@ -53,7 +53,7 @@ export default function ResourceManager() {
 									htmlFor="resource"
 									className="absolute start-1 top-0 z-10 block -translate-y-1/2 bg-background px-2 text-xs font-medium text-foreground group-has-[:disabled]:opacity-50"
 								>
-									Resource Name <span className="text-red-500">*</span>
+									Resource Name <span className="text-destructive">*</span>
 								</label>
 								<div className="relative">
 									<Input

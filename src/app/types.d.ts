@@ -1,8 +1,3 @@
-interface Booking {
-    date: string | Date
-    endDate: string | Date
-}
-
 interface Resource {
     id: string
     name: string
@@ -16,7 +11,7 @@ interface Resource {
 
 interface Booking {
     id: number
-    date: string | Date
+    startDate: string | Date
     endDate: string | Date
     resource?: {
         name: string

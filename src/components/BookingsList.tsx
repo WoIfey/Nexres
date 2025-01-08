@@ -4,10 +4,27 @@ import { useState } from 'react'
 import { format, isSameDay } from 'date-fns'
 import { toast } from 'sonner'
 import { deleteBooking, updateBooking } from '@/actions/booking'
-import { Trash2 } from 'lucide-react'
+import { Edit3, MoreVertical, Trash2 } from 'lucide-react'
 import { Button } from './ui/button'
 import { Calendar } from './ui/calendar'
 import { Input } from './ui/input'
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 
 export default function BookingsList({ bookings }: { bookings: Booking[] }) {
 	const [isDeleting, setIsDeleting] = useState<number | null>(null)
@@ -70,7 +87,7 @@ export default function BookingsList({ bookings }: { bookings: Booking[] }) {
 	return (
 		<div className="space-y-4">
 			{bookings.map((booking: Booking) => {
-				const isPast = isPastBooking(booking.date)
+				const isPast = isPastBooking(booking.startDate)
 				return (
 					<div
 						key={booking.id}
@@ -78,44 +95,93 @@ export default function BookingsList({ bookings }: { bookings: Booking[] }) {
 							isPast ? 'opacity-50' : ''
 						}`}
 					>
-						<div>
-							<p className="font-medium">
-								{format(new Date(booking.date), 'PPP')}
-								{!isSameDay(new Date(booking.date), new Date(booking.endDate)) && (
-									<>
-										{' - '}
-										{format(new Date(booking.endDate), 'PPP')}
-									</>
-								)}
-							</p>
-							<p className="text-sm text-muted-foreground">
-								{format(new Date(booking.date), 'p')}
-								{!isSameDay(new Date(booking.date), new Date(booking.endDate)) && (
-									<>
-										{' - '}
-										{format(new Date(booking.endDate), 'p')}
-									</>
-								)}
-							</p>
-							<p className="text-sm font-medium mt-1 truncate">
-								{booking.resource?.name}
-							</p>
-							<p className="text-xs text-muted-foreground truncate">
-								{booking.resource?.description}
-							</p>
-							<Button
-								variant="ghost"
-								size="sm"
-								onClick={() =>
-									setEditingBooking({
-										id: booking.id,
-										startDate: new Date(booking.date),
-										endDate: new Date(booking.endDate),
-									})
-								}
-							>
-								Edit
-							</Button>
+						<div className="flex justify-between w-full">
+							<div>
+								<p className="font-medium">
+									{format(new Date(booking.startDate), 'PPP')}
+									{!isSameDay(
+										new Date(booking.startDate),
+										new Date(booking.endDate)
+									) && (
+										<>
+											{' - '}
+											{format(new Date(booking.endDate), 'PPP')}
+										</>
+									)}
+								</p>
+								<p className="text-sm text-muted-foreground">
+									{format(new Date(booking.startDate), 'p')}
+									{!isSameDay(
+										new Date(booking.startDate),
+										new Date(booking.endDate)
+									) && (
+										<>
+											{' - '}
+											{format(new Date(booking.endDate), 'p')}
+										</>
+									)}
+								</p>
+								<p className="text-sm font-medium mt-1 truncate">
+									{booking.resource?.name}
+								</p>
+								<p className="text-xs text-muted-foreground truncate">
+									{booking.resource?.description}
+								</p>
+							</div>
+
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button variant="ghost" className="size-8 p-0">
+										<span className="sr-only">Open menu</span>
+										<MoreVertical />
+									</Button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent align="end">
+									<DropdownMenuItem
+										onClick={() =>
+											setEditingBooking({
+												id: booking.id,
+												startDate: new Date(booking.startDate),
+												endDate: new Date(booking.endDate),
+											})
+										}
+									>
+										<Edit3 className="size-4" />
+										<span>Edit</span>
+									</DropdownMenuItem>
+									<AlertDialog>
+										<AlertDialogTrigger asChild>
+											<DropdownMenuItem
+												onSelect={e => e.preventDefault()}
+												className="text-destructive"
+											>
+												<Trash2 className="size-4" />
+												<span>Delete</span>
+											</DropdownMenuItem>
+										</AlertDialogTrigger>
+										<AlertDialogContent>
+											<AlertDialogHeader>
+												<AlertDialogTitle>Remove booking?</AlertDialogTitle>
+												<AlertDialogDescription>
+													This action cannot be undone.
+												</AlertDialogDescription>
+											</AlertDialogHeader>
+											<AlertDialogFooter>
+												<AlertDialogCancel className="w-full">Cancel</AlertDialogCancel>
+												<AlertDialogAction asChild>
+													<Button
+														className="w-full"
+														disabled={isDeleting === booking.id}
+														onClick={() => handleDelete(booking.id)}
+													>
+														Confirm
+													</Button>
+												</AlertDialogAction>
+											</AlertDialogFooter>
+										</AlertDialogContent>
+									</AlertDialog>
+								</DropdownMenuContent>
+							</DropdownMenu>
 						</div>
 						<div className="flex justify-between w-full">
 							{editingBooking?.id === booking.id ? (
@@ -172,16 +238,6 @@ export default function BookingsList({ bookings }: { bookings: Booking[] }) {
 											Cancel
 										</Button>
 									</div>
-									<Button
-										variant="ghost"
-										size="sm"
-										onClick={() => handleDelete(booking.id)}
-										disabled={isDeleting === booking.id}
-										className="text-destructive dark:text-red-500 hover:bg-destructive/10 hover:text-destructive/75 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-									>
-										<Trash2 className="size-4" />
-										<span className="sr-only">Delete booking</span>
-									</Button>
 								</div>
 							) : null}
 						</div>
