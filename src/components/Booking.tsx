@@ -3,7 +3,7 @@ import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { format, isToday, setHours, setMinutes } from 'date-fns'
-import { CalendarIcon, Clock, Trash2 } from 'lucide-react'
+import { CalendarIcon, Clock } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { createBooking } from '@/actions/booking'
@@ -290,7 +290,13 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 													</div>
 													<div className="flex gap-2">
 														<Button
-															onClick={() => setEditingResource(resource)}
+															onClick={() =>
+																setEditingResource({
+																	id: resource.id,
+																	name: resource.name,
+																	description: resource.description || '',
+																})
+															}
 															variant="ghost"
 															size="sm"
 														>

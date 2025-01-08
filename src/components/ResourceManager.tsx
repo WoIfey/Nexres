@@ -3,7 +3,6 @@ import { useState, useTransition } from 'react'
 import { Button } from './ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Input } from './ui/input'
-import { Label } from './ui/label'
 import { toast } from 'sonner'
 import { createResource } from '@/actions/resource'
 
