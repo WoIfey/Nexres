@@ -42,8 +42,8 @@ export default async function Home() {
 						</div>
 					</div>
 				) : (
-					<div className="grid md:grid-cols-2 gap-6 items-center">
-						<div className="space-y-6">
+					<div className="grid lg:grid-cols-2 gap-6 lg:max-w-7xl lg:mx-auto">
+						<div className="space-y-6 lg:px-0 px-6">
 							<h2 className="text-3xl font-bold">Welcome to Nexres</h2>
 							<p className="text-lg text-muted-foreground">
 								Nexres is a booking app designed for teams. Our platform allows you to
@@ -59,7 +59,7 @@ export default async function Home() {
 								Join Nexres today and make your team arrive on time!
 							</p>
 						</div>
-						<div className="h-full">
+						<div className="flex justify-end">
 							<SignIn />
 						</div>
 					</div>
