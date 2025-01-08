@@ -57,7 +57,7 @@ export default function SignIn() {
 								},
 							}
 						)
-
+						setTurnstileToken(null)
 						if (signUpError) {
 							if (signUpError.code && signUpError.code === 'USER_ALREADY_EXISTS') {
 								const { error: signInError } = await authClient.signIn.email(formData)
@@ -103,7 +103,7 @@ export default function SignIn() {
 	}
 
 	return (
-		<div className="space-y-6 max-w-md mx-auto">
+		<div className="space-y-6 max-w-md lg:mx-0 mx-auto lg:pt-0">
 			{showForgotPassword ? (
 				<div className="space-y-6 text-center">
 					<div className="space-y-2">

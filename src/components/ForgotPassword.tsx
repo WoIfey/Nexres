@@ -14,25 +14,29 @@ export default function ForgotPassword({ onBack }: { onBack: () => void }) {
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
-		startTransition(async () => {
-			try {
-				const { error } = await authClient.forgetPassword({
-					email,
-					redirectTo: `/reset-password`,
-				})
+		if (turnstileToken) {
+			startTransition(async () => {
+				try {
+					setTurnstileToken(null)
 
-				if (error) {
-					toast.error('Failed to send reset email. Please try again.')
-					return
+					const { error } = await authClient.forgetPassword({
+						email,
+						redirectTo: `/reset-password`,
+					})
+
+					if (error) {
+						toast.error('Failed to send reset email. Please try again.')
+						return
+					}
+
+					toast.success('Password reset email sent! Please check your inbox.')
+					onBack()
+				} catch (err) {
+					console.error(err)
+					toast.error('An unexpected error occurred. Please try again.')
 				}
-
-				toast.success('Password reset email sent! Please check your inbox.')
-				onBack()
-			} catch (err) {
-				console.error(err)
-				toast.error('An unexpected error occurred. Please try again.')
-			}
-		})
+			})
+		}
 	}
 
 	return (
