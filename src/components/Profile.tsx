@@ -71,13 +71,13 @@ export default function Profile({ session }: { session: Session }) {
 	return (
 		<div className="flex items-center gap-4">
 			<div className="flex items-center gap-2">
-				<span className="text-sm font-medium hidden sm:inline">
+				<span className="text-sm font-medium">
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
-							<Button variant="outline">{session?.user?.email}</Button>
+							<Button variant="outline">{session?.user?.name}</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent className="w-56">
-							<DropdownMenuLabel>My Account</DropdownMenuLabel>
+							<DropdownMenuLabel>{session?.user?.email}</DropdownMenuLabel>
 							<DropdownMenuSeparator />
 							<DropdownMenuGroup>
 								<DropdownMenuItem>
