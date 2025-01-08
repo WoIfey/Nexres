@@ -6,10 +6,12 @@ import { authClient } from '@/lib/auth-client'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
+import { Turnstile } from '@marsidev/react-turnstile'
 
 export default function ForgotPassword({ onBack }: { onBack: () => void }) {
 	const [email, setEmail] = useState('')
 	const [isPending, startTransition] = useTransition()
+	const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
 	const router = useRouter()
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -27,7 +29,7 @@ export default function ForgotPassword({ onBack }: { onBack: () => void }) {
 				}
 
 				toast.success('Password reset email sent! Please check your inbox.')
-				router.push('')
+				onBack()
 			} catch (err) {
 				console.error(err)
 				toast.error('An unexpected error occurred. Please try again.')
@@ -70,8 +72,13 @@ export default function ForgotPassword({ onBack }: { onBack: () => void }) {
 				</div>
 			</div>
 
+			<Turnstile
+				siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY as string}
+				onSuccess={token => setTurnstileToken(token)}
+			/>
+
 			<div className="flex flex-col gap-2">
-				<Button type="submit" disabled={isPending}>
+				<Button type="submit" disabled={isPending || turnstileToken === null}>
 					{isPending ? (
 						<Loader2 className="size-4 animate-spin mr-2" />
 					) : (

@@ -9,6 +9,7 @@ export const auth = betterAuth({
     }),
     emailAndPassword: {
         enabled: true,
+        requireEmailVerification: true,
         sendResetPassword: async ({ user, url }) => {
             await sendEmail({
                 to: user.email,
@@ -16,6 +17,17 @@ export const auth = betterAuth({
                 text: `Click the link to reset your password: ${url}`,
             });
         },
+    },
+    emailVerification: {
+        sendOnSignUp: true,
+        autoSignInAfterVerification: true,
+        sendVerificationEmail: async ({ user, url }) => {
+            await sendEmail({
+                to: user.email,
+                subject: 'Verify your email address',
+                text: `Click the link to verify your email: ${url}`
+            })
+        }
     },
     socialProviders: {
         github: {
