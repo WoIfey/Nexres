@@ -87,4 +87,30 @@ export async function deleteResource(id: string) {
         console.error("Delete resource error:", error)
         return { success: false, error: "Failed to delete resource" }
     }
+}
+
+export async function updateResource(id: string, data: { name: string; description: string }) {
+    try {
+        const session = await auth.api.getSession({
+            headers: await headers(),
+        })
+
+        if (!session?.user?.id) {
+            return { success: false, error: "Unauthorized" }
+        }
+
+        const resource = await prisma.resource.update({
+            where: {
+                id,
+                userId: session.user.id
+            },
+            data
+        })
+
+        revalidatePath('/')
+        return { success: true, data: resource }
+    } catch (error) {
+        console.error("Update resource error:", error)
+        return { success: false, error: "Failed to update resource" }
+    }
 } 

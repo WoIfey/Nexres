@@ -8,7 +8,22 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
 	title: 'Nexres',
-	description: 'Next.js app for booking resources.',
+	description: 'Make appointments for different resources.',
+	openGraph: {
+		title: 'Nexres',
+		description: 'Make appointments for different resources.',
+		url: 'https://nexres.vercel.app/',
+		images: [
+			{
+				url: 'https://wolfey.s-ul.eu/Y9eVSNHd',
+				width: 1280,
+				height: 720,
+				alt: 'Thumbnail',
+			},
+		],
+		locale: 'en_US',
+		type: 'website',
+	},
 }
 
 export default function RootLayout({

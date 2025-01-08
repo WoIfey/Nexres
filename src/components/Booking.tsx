@@ -3,13 +3,13 @@ import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { format, isToday, setHours, setMinutes } from 'date-fns'
-import { CalendarIcon, Clock, Trash2 } from 'lucide-react'
+import { CalendarIcon, Clock } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { createBooking } from '@/actions/booking'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import ResourceManager from '@/components/ResourceManager'
-import { deleteResource } from '@/actions/resource'
+import { deleteResource, updateResource } from '@/actions/resource'
 import {
 	Drawer,
 	DrawerContent,
@@ -17,6 +17,7 @@ import {
 	DrawerTitle,
 	DrawerTrigger,
 } from '@/components/ui/drawer'
+import { Input } from '@/components/ui/input'
 
 const isTimeSlotBooked = (start: Date, end: Date, resource?: Resource) => {
 	if (!resource) return false
@@ -73,6 +74,11 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 	const [isDeletingResource, setIsDeletingResource] = useState<string | null>(
 		null
 	)
+	const [editingResource, setEditingResource] = useState<{
+		id: string
+		name: string
+		description: string
+	} | null>(null)
 
 	if (resources.length === 0) {
 		return (
@@ -159,6 +165,25 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 		}
 	}
 
+	const handleEditResource = async (
+		id: string,
+		name: string,
+		description: string
+	) => {
+		try {
+			const result = await updateResource(id, { name, description })
+			if (result.success) {
+				toast.success('Resource updated successfully')
+				setEditingResource(null)
+			} else {
+				toast.error(result.error)
+			}
+		} catch (error) {
+			console.error('Update resource error:', error)
+			toast.error('Failed to update resource')
+		}
+	}
+
 	const getAvailableHours = (date: Date): number[] => {
 		const now = new Date()
 		if (isToday(date)) {
@@ -184,8 +209,8 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 	return (
 		<div className="bg-card rounded-lg border shadow-sm">
 			<div className="p-6">
-				<div className="flex justify-between items-center mb-4">
-					<h2 className="text-2xl font-semibold">Book Appointment</h2>
+				<div className="flex flex-col sm:flex-row gap-4 justify-between items-center mb-4">
+					<h2 className="text-2xl font-semibold text-center">Book Appointment</h2>
 					<ResourceManager />
 				</div>
 
@@ -213,20 +238,81 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 													: 'hover:bg-accent'
 											)}
 										>
-											<div className="flex-1">
-												<p className="font-medium">{resource.name}</p>
-												<p className="text-sm opacity-90">{resource.description}</p>
-											</div>
-											<div
-												onClick={e => {
-													e.stopPropagation()
-													handleDeleteResource(resource.id)
-												}}
-												className="text-destructive dark:text-red-500 hover:bg-destructive/10 hover:text-destructive/75 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-											>
-												<Trash2 className="size-4" />
-												<span className="sr-only">Delete resource</span>
-											</div>
+											{editingResource?.id === resource.id ? (
+												<form
+													onSubmit={e => {
+														e.preventDefault()
+														handleEditResource(
+															resource.id,
+															editingResource.name,
+															editingResource.description
+														)
+													}}
+													className="w-full space-y-2"
+												>
+													<Input
+														value={editingResource.name}
+														onChange={e =>
+															setEditingResource({ ...editingResource, name: e.target.value })
+														}
+														maxLength={30}
+														required
+													/>
+													<Input
+														value={editingResource.description || ''}
+														onChange={e =>
+															setEditingResource({
+																...editingResource,
+																description: e.target.value,
+															})
+														}
+														maxLength={50}
+													/>
+													<div className="flex gap-2">
+														<Button type="submit" size="sm">
+															Save
+														</Button>
+														<Button
+															type="button"
+															variant="ghost"
+															size="sm"
+															onClick={() => setEditingResource(null)}
+														>
+															Cancel
+														</Button>
+													</div>
+												</form>
+											) : (
+												<div className="flex justify-between items-center">
+													<div>
+														<p className="font-medium">{resource.name}</p>
+														<p className="text-sm opacity-90">{resource.description}</p>
+													</div>
+													<div className="flex gap-2">
+														<Button
+															onClick={() =>
+																setEditingResource({
+																	id: resource.id,
+																	name: resource.name,
+																	description: resource.description || '',
+																})
+															}
+															variant="ghost"
+															size="sm"
+														>
+															Edit
+														</Button>
+														<Button
+															onClick={() => handleDeleteResource(resource.id)}
+															variant="ghost"
+															size="sm"
+															className="text-destructive"
+														>
+															Delete
+														</Button>
+													</div>
+												</div>
+											)}
 										</div>
 									</Button>
 								))}
@@ -248,7 +334,7 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 									)}
 									disabled={!selectedResource}
 								>
-									<CalendarIcon className="mr-2 h-4 w-4" />
+									<CalendarIcon className="mr-2 size-4" />
 									{startDate
 										? format(startDate, 'MM/dd/yyyy HH:mm')
 										: 'Select start date'}
@@ -341,7 +427,7 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 									)}
 									disabled={!startDate}
 								>
-									<CalendarIcon className="mr-2 h-4 w-4" />
+									<CalendarIcon className="mr-2 size-4" />
 									{endDate ? format(endDate, 'MM/dd/yyyy HH:mm') : 'Select end date'}
 								</Button>
 							</DrawerTrigger>
@@ -426,7 +512,7 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 					>
 						{isLoading ? (
 							<div className="flex items-center justify-center">
-								<Clock className="mr-2 h-4 w-4 animate-spin" />
+								<Clock className="mr-2 size-4 animate-spin" />
 								<span>Processing...</span>
 							</div>
 						) : (

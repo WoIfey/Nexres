@@ -1,6 +1,6 @@
 # Nexres
 
-Next.js app for booking resources.
+Make appointments for different resources.
 
 ## Setup
 
@@ -21,10 +21,9 @@ pnpm install
 
 Copy the `env.example` file and rename it to `.env` and set the following variables from:
 
-- Better Auth:
-  https://www.better-auth.com/docs/installation#set-environment-variables
-- GitHub Provider:
-  https://github.com/settings/developers
+- [Better Auth](https://www.better-auth.com/docs/installation#set-environment-variables)
+  - [GitHub Provider](https://github.com/settings/developers)
+- [Cloudflare Turnstile](https://www.cloudflare.com/application-services/products/turnstile/)
 
 4. **Initialize the database**
 
