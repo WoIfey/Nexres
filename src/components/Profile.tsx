@@ -10,7 +10,6 @@ import {
 	PlusCircle,
 	Settings,
 	Trash2,
-	User,
 	UserPlus,
 	Users,
 } from 'lucide-react'
