@@ -3,8 +3,8 @@ import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { format, isToday, setHours, setMinutes } from 'date-fns'
-import { CalendarIcon, Clock } from 'lucide-react'
-import { useState } from 'react'
+import { CalendarIcon, Clock, Edit3, MoreVertical, Trash2 } from 'lucide-react'
+import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { createBooking } from '@/actions/booking'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -18,12 +18,29 @@ import {
 	DrawerTrigger,
 } from '@/components/ui/drawer'
 import { Input } from '@/components/ui/input'
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 
 const isTimeSlotBooked = (start: Date, end: Date, resource?: Resource) => {
 	if (!resource) return false
 
 	return resource.bookings?.some((booking: Booking) => {
-		const bookingStart = new Date(booking.date)
+		const bookingStart = new Date(booking.startDate)
 		const bookingEnd = new Date(booking.endDate)
 
 		return (
@@ -79,6 +96,7 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 		name: string
 		description: string
 	} | null>(null)
+	const [isPending, startTransition] = useTransition()
 
 	if (resources.length === 0) {
 		return (
@@ -170,18 +188,20 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 		name: string,
 		description: string
 	) => {
-		try {
-			const result = await updateResource(id, { name, description })
-			if (result.success) {
-				toast.success('Resource updated successfully')
-				setEditingResource(null)
-			} else {
-				toast.error(result.error)
+		startTransition(async () => {
+			try {
+				const result = await updateResource(id, { name, description })
+				if (result.success) {
+					toast.success('Resource updated successfully')
+					setEditingResource(null)
+				} else {
+					toast.error(result.error)
+				}
+			} catch (error) {
+				console.error('Update resource error:', error)
+				toast.error('Failed to update resource')
 			}
-		} catch (error) {
-			console.error('Update resource error:', error)
-			toast.error('Failed to update resource')
-		}
+		})
 	}
 
 	const getAvailableHours = (date: Date): number[] => {
@@ -217,104 +237,186 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 				<div className="space-y-6">
 					<div>
 						<label className="text-sm font-medium mb-2 block">Resources</label>
-						<ScrollArea className="h-[200px] w-full rounded-md border">
-							<div className="p-4">
-								{resources.map((resource, index) => (
-									<Button
-										key={resource.id}
-										variant="ghost"
-										className={cn(
-											'w-full justify-start text-left p-0 h-auto hover:bg-transparent',
-											selectedResource === resource.id && 'bg-transparent',
-											index !== 0 && 'mt-2'
-										)}
-										onClick={() => setSelectedResource(resource.id)}
-									>
-										<div
-											className={cn(
-												'w-full flex items-center justify-between rounded-lg border p-3 transition-colors',
-												selectedResource === resource.id
-													? 'bg-primary text-primary-foreground'
-													: 'hover:bg-accent'
-											)}
-										>
-											{editingResource?.id === resource.id ? (
-												<form
-													onSubmit={e => {
-														e.preventDefault()
-														handleEditResource(
-															resource.id,
-															editingResource.name,
-															editingResource.description
-														)
-													}}
-													className="w-full space-y-2"
-												>
-													<Input
-														value={editingResource.name}
-														onChange={e =>
-															setEditingResource({ ...editingResource, name: e.target.value })
-														}
-														maxLength={30}
-														required
-													/>
-													<Input
-														value={editingResource.description || ''}
-														onChange={e =>
-															setEditingResource({
-																...editingResource,
-																description: e.target.value,
-															})
-														}
-														maxLength={50}
-													/>
-													<div className="flex gap-2">
-														<Button type="submit" size="sm">
-															Save
-														</Button>
-														<Button
-															type="button"
-															variant="ghost"
-															size="sm"
-															onClick={() => setEditingResource(null)}
+						<ScrollArea className="h-[256px] w-full rounded-md border">
+							<div className="p-4 grid gap-2">
+								{resources.map(resource => (
+									<div key={resource.id}>
+										{editingResource?.id === resource.id ? (
+											<form
+												onSubmit={e => {
+													e.preventDefault()
+													handleEditResource(
+														resource.id,
+														editingResource.name,
+														editingResource.description
+													)
+												}}
+												className="w-full space-y-4 p-4 pt-6 outline outline-1 outline-border rounded-lg"
+											>
+												<div className="group relative">
+													<label
+														htmlFor="resource"
+														className="absolute start-1 top-0 z-10 block -translate-y-1/2 bg-background px-2 text-xs font-medium text-foreground group-has-[:disabled]:opacity-50"
+													>
+														Resource Name <span className="text-destructive">*</span>
+													</label>
+													<div className="relative">
+														<Input
+															id="resource"
+															type="text"
+															placeholder=""
+															className="pe-16"
+															value={editingResource.name}
+															onChange={e =>
+																setEditingResource({
+																	...editingResource,
+																	name: e.target.value,
+																})
+															}
+															maxLength={30}
+															required
+															aria-describedby="character-count"
+														/>
+														<div
+															id="character-count"
+															className="pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-3 text-xs tabular-nums text-muted-foreground peer-disabled:opacity-50"
+															aria-live="polite"
+															role="status"
 														>
-															Cancel
-														</Button>
+															{editingResource.name.length}/{30}
+														</div>
 													</div>
-												</form>
-											) : (
-												<div className="flex justify-between items-center">
-													<div>
-														<p className="font-medium">{resource.name}</p>
-														<p className="text-sm opacity-90">{resource.description}</p>
+												</div>
+												<div className="group relative">
+													<label
+														htmlFor="description"
+														className="absolute start-1 top-0 z-10 block -translate-y-1/2 bg-background px-2 text-xs font-medium text-foreground group-has-[:disabled]:opacity-50"
+													>
+														Description
+													</label>
+													<div className="relative">
+														<Input
+															id="description"
+															type="text"
+															placeholder=""
+															className="pe-16"
+															value={editingResource.description || ''}
+															onChange={e =>
+																setEditingResource({
+																	...editingResource,
+																	description: e.target.value,
+																})
+															}
+															maxLength={50}
+															required
+															aria-describedby="character-count"
+														/>
+														<div
+															id="character-count"
+															className="pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-3 text-xs tabular-nums text-muted-foreground peer-disabled:opacity-50"
+															aria-live="polite"
+															role="status"
+														>
+															{editingResource.description.length}/{50}
+														</div>
 													</div>
-													<div className="flex gap-2">
-														<Button
-															onClick={() =>
+												</div>
+												<div className="flex gap-2">
+													<Button
+														type="button"
+														variant="outline"
+														size="sm"
+														className="w-full"
+														onClick={() => setEditingResource(null)}
+													>
+														Cancel
+													</Button>
+													<Button
+														type="submit"
+														size="sm"
+														className="w-full"
+														disabled={isPending}
+													>
+														Save
+													</Button>
+												</div>
+											</form>
+										) : (
+											<div
+												className={cn(
+													'w-full flex items-center justify-between rounded-lg border p-4 transition-colors cursor-pointer',
+													selectedResource === resource.id &&
+														'bg-primary text-primary-foreground hover:bg-primary/90'
+												)}
+												onClick={() => setSelectedResource(resource.id)}
+											>
+												<div className="flex-1">
+													<div className="min-w-0 flex-1">
+														<p className="font-medium truncate">{resource.name}</p>
+														{resource.description && (
+															<p className="text-sm opacity-90 truncate mt-0.5">
+																{resource.description}
+															</p>
+														)}
+													</div>
+												</div>
+
+												<DropdownMenu>
+													<DropdownMenuTrigger className="size-8 p-0 flex items-center justify-center">
+														<span className="sr-only">Open menu</span>
+														<MoreVertical className="size-5" />
+													</DropdownMenuTrigger>
+													<DropdownMenuContent align="end">
+														<DropdownMenuItem
+															onClick={() => {
 																setEditingResource({
 																	id: resource.id,
 																	name: resource.name,
 																	description: resource.description || '',
 																})
-															}
-															variant="ghost"
-															size="sm"
+															}}
 														>
-															Edit
-														</Button>
-														<Button
-															onClick={() => handleDeleteResource(resource.id)}
-															variant="ghost"
-															size="sm"
-															className="text-destructive"
-														>
-															Delete
-														</Button>
-													</div>
-												</div>
-											)}
-										</div>
-									</Button>
+															<Edit3 className="size-4" />
+															<span>Edit</span>
+														</DropdownMenuItem>
+														<AlertDialog>
+															<AlertDialogTrigger asChild>
+																<DropdownMenuItem
+																	onSelect={e => e.preventDefault()}
+																	className="text-destructive"
+																>
+																	<Trash2 className="size-4" />
+																	<span>Delete</span>
+																</DropdownMenuItem>
+															</AlertDialogTrigger>
+															<AlertDialogContent>
+																<AlertDialogHeader>
+																	<AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+																	<AlertDialogDescription>
+																		This action cannot be undone. This will also delete the
+																		bookings associated with this resource.
+																	</AlertDialogDescription>
+																</AlertDialogHeader>
+																<AlertDialogFooter>
+																	<AlertDialogCancel className="w-full">
+																		Cancel
+																	</AlertDialogCancel>
+																	<AlertDialogAction asChild>
+																		<Button
+																			className="w-full"
+																			onClick={() => handleDeleteResource(resource.id)}
+																		>
+																			Confirm
+																		</Button>
+																	</AlertDialogAction>
+																</AlertDialogFooter>
+															</AlertDialogContent>
+														</AlertDialog>
+													</DropdownMenuContent>
+												</DropdownMenu>
+											</div>
+										)}
+									</div>
 								))}
 							</div>
 						</ScrollArea>
@@ -322,7 +424,7 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 
 					<div>
 						<label className="text-sm font-medium mb-2 block">
-							Start Date <span className="text-red-500">*</span>
+							Start Date <span className="text-destructive">*</span>
 						</label>
 						<Drawer open={isStartDrawerOpen} onOpenChange={setIsStartDrawerOpen}>
 							<DrawerTrigger asChild>

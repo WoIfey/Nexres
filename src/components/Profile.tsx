@@ -2,10 +2,21 @@
 import { authClient } from '@/lib/auth-client'
 import { useRouter } from 'next/navigation'
 import { Button } from './ui/button'
-import { LogOut } from 'lucide-react'
+import { LogOut, Trash2 } from 'lucide-react'
 import { useTransition } from 'react'
 import { toast } from 'sonner'
 import { deleteAccount } from '@/actions/account/delete-account'
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 
 export default function Profile({ session }: { session: Session }) {
 	const [isPending, startTransition] = useTransition()
@@ -50,9 +61,36 @@ export default function Profile({ session }: { session: Session }) {
 				<LogOut className="size-4" />
 				<span className="hidden sm:inline ml-2">Sign Out</span>
 			</Button>
-			<Button onClick={handleDeleteAccount} disabled={isPending}>
-				Delete Account
-			</Button>
+
+			<AlertDialog>
+				<AlertDialogTrigger asChild>
+					<Button>
+						<Trash2 className="size-4" />
+						<span>Delete</span>
+					</Button>
+				</AlertDialogTrigger>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Permanently delete account?</AlertDialogTitle>
+						<AlertDialogDescription>
+							This action cannot be undone. This will remove all your resources and
+							bookings!
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel className="w-full">Cancel</AlertDialogCancel>
+						<AlertDialogAction asChild>
+							<Button
+								className="w-full"
+								onClick={handleDeleteAccount}
+								disabled={isPending}
+							>
+								Delete Account
+							</Button>
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>
 	)
 }

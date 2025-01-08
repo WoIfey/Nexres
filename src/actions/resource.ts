@@ -51,7 +51,7 @@ export async function getResources() {
                 },
             },
             orderBy: {
-                name: 'asc'
+                createdAt: 'desc'
             },
             include: {
                 Booking: true,

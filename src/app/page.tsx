@@ -21,13 +21,9 @@ export default async function Home() {
 		<main className="min-h-dvh bg-background flex flex-col">
 			<div className="container mx-auto px-4 py-10 flex-grow">
 				<header className="flex justify-between items-center mb-10">
-					<div
-						className={`flex items-center gap-4 ${!session?.user ? 'w-full justify-center' : ''}`}
-					>
-						<Link href="/">
-							<h1 className="text-2xl font-bold">Nexres</h1>
-						</Link>
-					</div>
+					<Link href="/">
+						<h1 className="text-2xl font-bold">Nexres</h1>
+					</Link>
 					<Profile session={session as Session} />
 				</header>
 
@@ -46,7 +42,27 @@ export default async function Home() {
 						</div>
 					</div>
 				) : (
-					<SignIn />
+					<div className="grid md:grid-cols-2 gap-6 items-center">
+						<div className="space-y-6">
+							<h2 className="text-3xl font-bold">Welcome to Nexres</h2>
+							<p className="text-lg text-muted-foreground">
+								Nexres is a booking app designed for teams. Our platform allows you to
+								create and manage resources, while team members can easily book these
+								resources as needed.
+							</p>
+							<ul className="list-disc list-inside space-y-2 text-muted-foreground">
+								<li>Efficient resource management for teams</li>
+								<li>Easy-to-use booking interface</li>
+								<li>Customizable resources</li>
+							</ul>
+							<p className="text-muted-foreground">
+								Join Nexres today and make your team arrive on time!
+							</p>
+						</div>
+						<div className="h-full">
+							<SignIn />
+						</div>
+					</div>
 				)}
 			</div>
 			<Footer />

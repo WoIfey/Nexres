@@ -45,6 +45,16 @@ CREATE TABLE "account" (
 );
 
 -- CreateTable
+CREATE TABLE "rateLimit" (
+    "id" TEXT NOT NULL,
+    "key" TEXT,
+    "count" INTEGER,
+    "lastRequest" INTEGER,
+
+    CONSTRAINT "rateLimit_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "verification" (
     "id" TEXT NOT NULL,
     "identifier" TEXT NOT NULL,
@@ -61,7 +71,8 @@ CREATE TABLE "booking" (
     "id" SERIAL NOT NULL,
     "userId" TEXT NOT NULL,
     "resourceId" TEXT,
-    "date" TIMESTAMP(3) NOT NULL,
+    "startDate" TIMESTAMP(3) NOT NULL,
+    "endDate" TIMESTAMP(3) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 

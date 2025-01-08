@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import { z } from 'zod'
 import { Loader2 } from 'lucide-react'
 import { Turnstile } from '@marsidev/react-turnstile'
+import { isDisposableEmail } from 'disposable-email-domains-js'
 
 const signInSchema = z.object({
 	email: z.string().email('Please enter a valid email address'),
@@ -34,55 +35,70 @@ export default function SignIn() {
 		}
 
 		if (turnstileToken) {
-			startTransition(async () => {
-				try {
-					const { error: signUpError } = await authClient.signUp.email(
-						{
-							name: formData.email,
-							...formData,
-						},
-						{
-							onError: ctx => {
-								console.log(ctx.error.status)
-								if (ctx.error.status === 403) {
-									alert('Please verify your email address')
-								}
-								if (ctx.error.status !== 422) {
-									toast.error(ctx.error.message)
-								}
+			if (!isDisposableEmail(formData.email)) {
+				startTransition(async () => {
+					try {
+						const { error: signUpError } = await authClient.signUp.email(
+							{
+								name: formData.email,
+								...formData,
 							},
-						}
-					)
+							{
+								onError: ctx => {
+									if (ctx.error.status === 429) {
+										console.log(`Rate limit exceeded.`)
+									}
+									if (ctx.error.status === 403) {
+										toast.error('Please verify your email address')
+									}
+									if (ctx.error.status !== 422) {
+										toast.error(ctx.error.message)
+									}
+								},
+							}
+						)
 
-					if (signUpError) {
-						if (signUpError.code && signUpError.code === 'USER_ALREADY_EXISTS') {
-							const { error: signInError } = await authClient.signIn.email(formData)
+						if (signUpError) {
+							if (signUpError.code && signUpError.code === 'USER_ALREADY_EXISTS') {
+								const { error: signInError } = await authClient.signIn.email(formData)
+								if (signInError?.code === 'EMAIL_NOT_VERIFIED') {
+									toast.error('Please verify your email address.', {
+										description: 'Be sure to check your junk email.',
+									})
+									return
+								}
 
-							if (signInError?.code) {
+								if (signInError?.code) {
+									toast.error(
+										errorMessages[signInError.code as keyof typeof errorMessages] ||
+											errorMessages.default
+									)
+									return
+								}
+
+								toast.success('Signed in successfully!')
+							} else if (signUpError.code) {
 								toast.error(
-									errorMessages[signInError.code as keyof typeof errorMessages] ||
+									errorMessages[signUpError.code as keyof typeof errorMessages] ||
 										errorMessages.default
 								)
 								return
 							}
-							toast.success('Signed in successfully')
-						} else if (signUpError.code) {
-							toast.error(
-								errorMessages[signUpError.code as keyof typeof errorMessages] ||
-									errorMessages.default
-							)
-							return
+						} else {
+							toast.success('Account created, please verify your email!', {
+								description: 'Be sure to check your junk email.',
+							})
 						}
-					} else {
-						toast.success('Account created, please verify your email!')
-					}
 
-					router.refresh()
-				} catch (error) {
-					console.error(error)
-					toast.error(errorMessages.default)
-				}
-			})
+						router.refresh()
+					} catch (error) {
+						console.error(error)
+						toast.error(errorMessages.default)
+					}
+				})
+			} else {
+				toast.error('Please insert an valid email.')
+			}
 		}
 	}
 
@@ -103,13 +119,7 @@ export default function SignIn() {
 			) : (
 				<>
 					{!isPending ? (
-						<>
-							<div className="space-y-2 text-center">
-								<h2 className="text-2xl font-semibold tracking-tight">Welcome!</h2>
-								<p className="text-sm text-muted-foreground">
-									Start managing your resources with Nexres.
-								</p>
-							</div>
+						<div className="bg-card rounded-lg border shadow-sm p-6">
 							<form className="space-y-4" onSubmit={handleSubmit}>
 								<div className="space-y-6">
 									<div className="space-y-2">
@@ -206,7 +216,7 @@ export default function SignIn() {
 									)}
 								</Button>
 							</form>
-						</>
+						</div>
 					) : (
 						<div className="flex items-center justify-center">
 							<Loader2 className="size-8 animate-spin mr-2" />
