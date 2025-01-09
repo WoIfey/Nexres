@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { format, isSameDay } from 'date-fns'
 import { toast } from 'sonner'
 import { deleteBooking, updateBooking } from '@/actions/booking'
@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/alert-dialog'
 
 export default function BookingsList({ bookings }: { bookings: Booking[] }) {
+	const [mounted, setMounted] = useState(false)
 	const [isDeleting, setIsDeleting] = useState<number | null>(null)
 	const [editingBooking, setEditingBooking] = useState<{
 		id: number
@@ -76,6 +77,10 @@ export default function BookingsList({ bookings }: { bookings: Booking[] }) {
 		return new Date(date) < new Date()
 	}
 
+	useEffect(() => {
+		setMounted(true)
+	}, [])
+
 	if (!bookings.length) {
 		return (
 			<div className="space-y-4">
@@ -86,14 +91,17 @@ export default function BookingsList({ bookings }: { bookings: Booking[] }) {
 
 	return (
 		<div className="space-y-4">
-			{bookings.map((booking: Booking) => {
+			{bookings.map((booking: Booking, index: number) => {
 				const isPast = isPastBooking(booking.startDate)
 				return (
 					<div
 						key={booking.id}
-						className={`bg-card rounded-lg border p-4 flex flex-col justify-between items-start ${
+						className={`bg-card rounded-lg border p-4 flex flex-col justify-between items-start transition-all duration-300 ${
 							isPast ? 'opacity-50' : ''
-						}`}
+						} ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}
+						style={{
+							transitionDelay: `${index * 100}ms`,
+						}}
 					>
 						<div className="flex justify-between w-full">
 							<div>
