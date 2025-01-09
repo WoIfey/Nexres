@@ -264,7 +264,7 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 														<Input
 															id="resource"
 															type="text"
-															placeholder=""
+															placeholder="Room 404"
 															className="pe-16"
 															value={editingResource.name}
 															onChange={e =>
@@ -298,7 +298,7 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 														<Input
 															id="description"
 															type="text"
-															placeholder=""
+															placeholder="Something about the resource"
 															className="pe-16"
 															value={editingResource.description || ''}
 															onChange={e =>
@@ -308,7 +308,6 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 																})
 															}
 															maxLength={50}
-															required
 															aria-describedby="character-count"
 														/>
 														<div

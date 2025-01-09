@@ -60,8 +60,8 @@ model Account {
 model RateLimit {
   id          String  @id
   key         String?
-  count       Int?
-  lastRequest Int?
+  count       BigInt?
+  lastRequest BigInt?
 
   @@map("rateLimit")
 }

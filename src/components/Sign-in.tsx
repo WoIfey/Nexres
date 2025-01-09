@@ -46,7 +46,7 @@ export default function SignIn() {
 							{
 								onError: ctx => {
 									if (ctx.error.status === 429) {
-										console.log(`Rate limit exceeded.`)
+										toast.error(`Rate limit exceeded.`)
 									}
 									if (ctx.error.status === 403) {
 										toast.error('Please verify your email address')
