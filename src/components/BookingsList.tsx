@@ -98,26 +98,20 @@ export default function BookingsList({ bookings }: { bookings: Booking[] }) {
 						<div className="flex justify-between w-full">
 							<div>
 								<p className="font-medium">
-									{format(new Date(booking.startDate), 'PPP')}
-									{!isSameDay(
-										new Date(booking.startDate),
-										new Date(booking.endDate)
-									) && (
+									{format(booking.startDate, 'PPP')}
+									{!isSameDay(booking.startDate, booking.endDate) && (
 										<>
 											{' - '}
-											{format(new Date(booking.endDate), 'PPP')}
+											{format(booking.endDate, 'PPP')}
 										</>
 									)}
 								</p>
 								<p className="text-sm text-muted-foreground">
-									{format(new Date(booking.startDate), 'p')}
-									{!isSameDay(
-										new Date(booking.startDate),
-										new Date(booking.endDate)
-									) && (
+									{format(booking.startDate, 'p')}
+									{!isSameDay(booking.startDate, booking.endDate) && (
 										<>
 											{' - '}
-											{format(new Date(booking.endDate), 'p')}
+											{format(booking.endDate, 'p')}
 										</>
 									)}
 								</p>
