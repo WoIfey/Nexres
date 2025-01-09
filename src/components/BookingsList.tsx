@@ -97,7 +97,7 @@ export default function BookingsList({ bookings }: { bookings: Booking[] }) {
 					>
 						<div className="flex justify-between w-full">
 							<div>
-								<p className="font-medium">
+								<p suppressHydrationWarning className="font-medium">
 									{format(booking.startDate, 'PPP')}
 									{!isSameDay(booking.startDate, booking.endDate) && (
 										<>
@@ -106,7 +106,7 @@ export default function BookingsList({ bookings }: { bookings: Booking[] }) {
 										</>
 									)}
 								</p>
-								<p className="text-sm text-muted-foreground">
+								<p suppressHydrationWarning className="text-sm text-muted-foreground">
 									{format(booking.startDate, 'p')}
 									{!isSameDay(booking.startDate, booking.endDate) && (
 										<>
