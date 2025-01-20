@@ -4,7 +4,7 @@ import { authClient } from '@/lib/auth-client'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import Footer from './Footer'
@@ -14,8 +14,9 @@ export default function ResetPassword() {
 	const [confirmPassword, setConfirmPassword] = useState('')
 	const [isPending, startTransition] = useTransition()
 	const router = useRouter()
+	const searchParams = useSearchParams()
 
-	const token = new URLSearchParams(window.location.search).get('token')
+	const token = searchParams.get('token')
 
 	if (!token) {
 		toast.error('Reset password failed.', {
