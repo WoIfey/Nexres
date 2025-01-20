@@ -35,10 +35,4 @@ export const auth = betterAuth({
             clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
         }
     },
-    rateLimit: {
-        storage: "database",
-        modelName: "rateLimit",
-        window: 45,
-        max: 100,
-    },
 })

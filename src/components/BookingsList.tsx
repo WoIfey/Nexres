@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { format, isSameDay } from 'date-fns'
 import { toast } from 'sonner'
 import { deleteBooking, updateBooking } from '@/actions/booking'
@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/alert-dialog'
 
 export default function BookingsList({ bookings }: { bookings: Booking[] }) {
+	const [mounted, setMounted] = useState(false)
 	const [isDeleting, setIsDeleting] = useState<number | null>(null)
 	const [editingBooking, setEditingBooking] = useState<{
 		id: number
@@ -76,6 +77,14 @@ export default function BookingsList({ bookings }: { bookings: Booking[] }) {
 		return new Date(date) < new Date()
 	}
 
+	useEffect(() => {
+		setMounted(true)
+	}, [])
+
+	if (!mounted) {
+		return null
+	}
+
 	if (!bookings.length) {
 		return (
 			<div className="space-y-4">
@@ -97,7 +106,7 @@ export default function BookingsList({ bookings }: { bookings: Booking[] }) {
 					>
 						<div className="flex justify-between w-full">
 							<div>
-								<p suppressHydrationWarning className="font-medium">
+								<p className="font-medium">
 									{format(booking.startDate, 'PPP')}
 									{!isSameDay(booking.startDate, booking.endDate) && (
 										<>
@@ -106,7 +115,7 @@ export default function BookingsList({ bookings }: { bookings: Booking[] }) {
 										</>
 									)}
 								</p>
-								<p suppressHydrationWarning className="text-sm text-muted-foreground">
+								<p className="text-sm text-muted-foreground">
 									{format(booking.startDate, 'p')}
 									{!isSameDay(booking.startDate, booking.endDate) && (
 										<>

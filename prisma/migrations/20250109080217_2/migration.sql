@@ -1,3 +1,0 @@
--- AlterTable
-ALTER TABLE "rateLimit" ALTER COLUMN "count" SET DATA TYPE BIGINT,
-ALTER COLUMN "lastRequest" SET DATA TYPE BIGINT;
