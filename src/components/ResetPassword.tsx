@@ -15,6 +15,14 @@ export default function ResetPassword() {
 	const [isPending, startTransition] = useTransition()
 	const router = useRouter()
 
+	const token = new URLSearchParams(window.location.search).get('token')
+
+	if (!token) {
+		toast.error('Reset password failed.', {
+			description: 'Please use a valid reset password link.',
+		})
+	}
+
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
 		if (password !== confirmPassword) {
@@ -26,9 +34,12 @@ export default function ResetPassword() {
 			try {
 				const { error } = await authClient.resetPassword({
 					newPassword: password,
+					token: token!,
 				})
 				if (error) {
-					toast.error('Error resetting password')
+					toast.error(`Reset password failed.`, {
+						description: `${error.message}`,
+					})
 				} else {
 					toast.success('Password reset successfully')
 					setPassword('')
