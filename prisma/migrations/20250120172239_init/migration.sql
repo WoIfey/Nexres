@@ -45,16 +45,6 @@ CREATE TABLE "account" (
 );
 
 -- CreateTable
-CREATE TABLE "rateLimit" (
-    "id" TEXT NOT NULL,
-    "key" TEXT,
-    "count" INTEGER,
-    "lastRequest" INTEGER,
-
-    CONSTRAINT "rateLimit_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "verification" (
     "id" TEXT NOT NULL,
     "identifier" TEXT NOT NULL,
