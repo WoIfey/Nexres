@@ -29,7 +29,9 @@ export default function ForgotPassword({ onBack }: { onBack: () => void }) {
 						return
 					}
 
-					toast.success('Password reset email sent! Please check your inbox.')
+					toast.success('Password reset email sent!', {
+						description: 'Please check your inbox.',
+					})
 					onBack()
 				} catch (err) {
 					console.error(err)
