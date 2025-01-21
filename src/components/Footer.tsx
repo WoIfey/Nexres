@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import ModeToggle from './ModeToggle'
 import { Button } from './ui/button'
+import Github from './ui/github'
 
 export default function Footer() {
 	return (
@@ -10,13 +11,14 @@ export default function Footer() {
 					&copy; 2025 Nexres
 				</p>
 				<div className="flex items-center gap-2">
-					<Button variant="outline" size="icon" asChild>
+					<Button
+						variant="outline"
+						size="icon"
+						className="[&_svg]:size-auto"
+						asChild
+					>
 						<Link href="https://github.com/WoIfey/nexres" target="_blank">
-							<img
-								src="https://cdn.wolfey.uk/IHbGO2Mm"
-								alt="GitHub"
-								className="size-5 dark:invert"
-							/>
+							<Github className="invert dark:invert-0" width={18} height={18} />
 						</Link>
 					</Button>
 					<ModeToggle />

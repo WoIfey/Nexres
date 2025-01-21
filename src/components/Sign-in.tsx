@@ -10,6 +10,7 @@ import { z } from 'zod'
 import { Loader2 } from 'lucide-react'
 import { Turnstile } from '@marsidev/react-turnstile'
 import { isDisposableEmail } from 'disposable-email-domains-js'
+import Github from './ui/github'
 
 const signInSchema = z.object({
 	email: z.string().email('Please enter a valid email address'),
@@ -246,11 +247,7 @@ export default function SignIn() {
 										<Loader2 className="size-4 animate-spin mr-2" />
 									) : (
 										<>
-											<img
-												src="https://cdn.wolfey.uk/IHbGO2Mm"
-												alt="GitHub"
-												className="size-4 invert"
-											/>
+											<Github />
 											Continue with GitHub
 										</>
 									)}
