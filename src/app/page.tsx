@@ -19,11 +19,14 @@ export default async function Home() {
 
 	return (
 		<main className="min-h-dvh bg-background flex flex-col">
-			<div className="container mx-auto px-4 py-10 flex-grow">
-				<header className="flex justify-between items-center mb-10">
-					<Link href="/">
-						<h1 className="text-2xl font-bold">Nexres</h1>
-					</Link>
+			<div className="container mx-auto px-4 lg:py-10 py-6 flex-grow">
+				<header className="flex justify-between items-center lg:mb-10 mb-6">
+					<div className="flex items-center gap-3">
+						<Link href="/">
+							<h1 className="text-2xl font-bold">Nexres</h1>
+						</Link>
+						<p className="bg-primary px-2 py-0.5 rounded-lg">Beta</p>
+					</div>
 					<Profile session={session as Session} />
 				</header>
 

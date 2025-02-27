@@ -2,68 +2,24 @@
 import { authClient } from '@/lib/auth-client'
 import { useRouter } from 'next/navigation'
 import { Button } from './ui/button'
-import {
-	LogOut,
-	Mail,
-	MessageSquare,
-	Plus,
-	PlusCircle,
-	Settings,
-	Trash2,
-	UserPlus,
-	Users,
-} from 'lucide-react'
-import { useTransition } from 'react'
-import { toast } from 'sonner'
-import { deleteAccount } from '@/actions/account/delete-account'
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-	AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
+import { LogOut, Settings } from 'lucide-react'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuGroup,
 	DropdownMenuItem,
 	DropdownMenuLabel,
-	DropdownMenuPortal,
 	DropdownMenuSeparator,
-	DropdownMenuSub,
-	DropdownMenuSubContent,
-	DropdownMenuSubTrigger,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import Link from 'next/link'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 export default function Profile({ session }: { session: Session }) {
-	const [isPending, startTransition] = useTransition()
 	const router = useRouter()
 	const handleSignOut = async () => {
 		await authClient.signOut()
 		router.refresh()
-	}
-
-	async function handleDeleteAccount() {
-		startTransition(async () => {
-			try {
-				const result = await deleteAccount()
-				if (result.success) {
-					toast.success(result.message)
-					router.push('/')
-				} else {
-					toast.error(result.message)
-				}
-			} catch (error) {
-				console.error('Error deleting account:', error)
-				toast.error('Failed to delete account')
-			}
-		})
 	}
 
 	if (!session?.user) return null
@@ -74,51 +30,29 @@ export default function Profile({ session }: { session: Session }) {
 				<span className="text-sm font-medium">
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
-							<Button variant="outline">{session?.user?.name}</Button>
+							<Button variant="outline">
+								<Avatar className="size-6">
+									<AvatarImage src={session?.user?.image || ''} />
+									<AvatarFallback>
+										{session?.user?.name.charAt(0).toUpperCase()}
+									</AvatarFallback>
+								</Avatar>
+								{session?.user?.name}
+							</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent className="w-56">
 							<DropdownMenuLabel>{session?.user?.email}</DropdownMenuLabel>
 							<DropdownMenuSeparator />
 							<DropdownMenuGroup>
-								<DropdownMenuItem>
-									<Settings />
-									<span>Settings</span>
+								<DropdownMenuItem asChild>
+									<Link href="/account">
+										<Settings />
+										Settings
+									</Link>
 								</DropdownMenuItem>
-								<AlertDialog>
-									<AlertDialogTrigger asChild>
-										<DropdownMenuItem
-											onSelect={e => e.preventDefault()}
-											className="text-destructive"
-										>
-											<Trash2 />
-											Delete Account
-										</DropdownMenuItem>
-									</AlertDialogTrigger>
-									<AlertDialogContent>
-										<AlertDialogHeader>
-											<AlertDialogTitle>Permanently delete account?</AlertDialogTitle>
-											<AlertDialogDescription>
-												This action cannot be undone. This will remove all your resources
-												and bookings!
-											</AlertDialogDescription>
-										</AlertDialogHeader>
-										<AlertDialogFooter>
-											<AlertDialogCancel className="w-full">Cancel</AlertDialogCancel>
-											<AlertDialogAction asChild>
-												<Button
-													className="w-full"
-													onClick={handleDeleteAccount}
-													disabled={isPending}
-												>
-													Delete Account
-												</Button>
-											</AlertDialogAction>
-										</AlertDialogFooter>
-									</AlertDialogContent>
-								</AlertDialog>
 							</DropdownMenuGroup>
 							<DropdownMenuSeparator />
-							<DropdownMenuGroup>
+							{/* <DropdownMenuGroup>
 								<DropdownMenuItem>
 									<Users />
 									<span>Team</span>
@@ -151,7 +85,7 @@ export default function Profile({ session }: { session: Session }) {
 									<span>New Team</span>
 								</DropdownMenuItem>
 							</DropdownMenuGroup>
-							<DropdownMenuSeparator />
+							<DropdownMenuSeparator /> */}
 							<DropdownMenuItem onClick={handleSignOut}>
 								<LogOut />
 								<span>Log out</span>
