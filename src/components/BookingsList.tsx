@@ -116,13 +116,15 @@ export default function BookingsList({ bookings }: { bookings: Booking[] }) {
 									)}
 								</p>
 								<p className="text-sm text-muted-foreground">
-									{format(booking.startDate, 'p')}
-									{!isSameDay(booking.startDate, booking.endDate) && (
+									{format(booking.startDate, 'HH:mm')}
+									{!isSameDay(booking.startDate, booking.endDate) ||
+									format(booking.startDate, 'HH:mm') !==
+										format(booking.endDate, 'HH:mm') ? (
 										<>
 											{' - '}
-											{format(booking.endDate, 'p')}
+											{format(booking.endDate, 'HH:mm')}
 										</>
-									)}
+									) : null}
 								</p>
 								<p className="text-sm font-medium mt-1 truncate">
 									{booking.resource?.name}

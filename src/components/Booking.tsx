@@ -1,8 +1,7 @@
 'use client'
-import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { format, isToday, setHours, setMinutes } from 'date-fns'
+import { format } from 'date-fns'
 import { CalendarIcon, Clock, Edit3, MoreVertical, Trash2 } from 'lucide-react'
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
@@ -35,6 +34,8 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import CalendarThing from './Calendar'
+import { DateRange } from 'react-day-picker'
 
 const isTimeSlotBooked = (start: Date, end: Date, resource?: Resource) => {
 	if (!resource) return false
@@ -51,43 +52,11 @@ const isTimeSlotBooked = (start: Date, end: Date, resource?: Resource) => {
 	})
 }
 
-function TimeSelector({
-	options,
-	selectedValue,
-	onSelect,
-}: {
-	options: TimeOption[]
-	selectedValue: number
-	onSelect: (value: number) => void
-}) {
-	return (
-		<ScrollArea className="h-[200px] w-[110px] rounded-md border">
-			<div className="p-2">
-				{options.map(option => (
-					<Button
-						key={option.value}
-						variant="ghost"
-						className={cn(
-							'w-full justify-center mb-1',
-							selectedValue === option.value && 'bg-primary text-primary-foreground'
-						)}
-						onClick={() => onSelect(option.value)}
-					>
-						{option.label}
-					</Button>
-				))}
-			</div>
-		</ScrollArea>
-	)
-}
-
 export default function Booking({ resources }: { resources: Resource[] }) {
-	const [startDate, setStartDate] = useState<Date | undefined>()
-	const [endDate, setEndDate] = useState<Date | undefined>()
+	const [dateRange, setDateRange] = useState<DateRange | undefined>()
 	const [isLoading, setIsLoading] = useState(false)
 	const [selectedResource, setSelectedResource] = useState<string>()
 	const [isStartDrawerOpen, setIsStartDrawerOpen] = useState(false)
-	const [isEndDrawerOpen, setIsEndDrawerOpen] = useState(false)
 	const [isDeletingResource, setIsDeletingResource] = useState<string | null>(
 		null
 	)
@@ -117,20 +86,24 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 	}
 
 	const handleBooking = async () => {
-		if (!startDate || !selectedResource) {
-			toast.error('Please select start date and resource')
+		if (!dateRange?.from || !selectedResource) {
+			toast.error('Please select date range and resource')
 			return
 		}
 
-		const effectiveEndDate = endDate || new Date(startDate)
-
-		if (endDate && endDate <= startDate) {
+		if (dateRange.to && dateRange.to <= dateRange.from) {
 			toast.error('End date must be after start date')
 			return
 		}
 
 		const selectedResourceObj = resources.find(r => r.id === selectedResource)
-		if (isTimeSlotBooked(startDate, effectiveEndDate, selectedResourceObj)) {
+		if (
+			isTimeSlotBooked(
+				dateRange.from,
+				dateRange.to || dateRange.from,
+				selectedResourceObj
+			)
+		) {
 			toast.error('This time slot is already booked')
 			return
 		}
@@ -138,15 +111,14 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 		setIsLoading(true)
 		try {
 			const result = await createBooking({
-				startDate,
-				endDate: effectiveEndDate,
+				startDate: dateRange.from,
+				endDate: dateRange.to || dateRange.from,
 				resourceId: selectedResource,
 			})
 
 			if (result.success) {
 				toast.success('Booking created successfully')
-				setStartDate(undefined)
-				setEndDate(undefined)
+				setDateRange(undefined)
 				setSelectedResource(undefined)
 			} else {
 				toast.error(result.error || 'Failed to create booking')
@@ -169,8 +141,7 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 				toast.success('Resource deleted successfully')
 				if (selectedResource === id) {
 					setSelectedResource(undefined)
-					setStartDate(undefined)
-					setEndDate(undefined)
+					setDateRange(undefined)
 				}
 			} else {
 				toast.error(result.error)
@@ -202,28 +173,6 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 				toast.error('Failed to update resource')
 			}
 		})
-	}
-
-	const getAvailableHours = (date: Date): number[] => {
-		const now = new Date()
-		if (isToday(date)) {
-			const currentHour = now.getHours()
-			return Array.from({ length: 24 - currentHour }, (_, i) => currentHour + i)
-		}
-		return Array.from({ length: 24 }, (_, i) => i)
-	}
-
-	const getAvailableMinutes = (date: Date, hour: number): number[] => {
-		const now = new Date()
-		if (isToday(date) && hour === now.getHours()) {
-			const currentMinutes = now.getMinutes()
-			const nextFive = Math.ceil(currentMinutes / 5) * 5
-			return Array.from(
-				{ length: 12 - Math.floor(nextFive / 5) },
-				(_, i) => (nextFive + i * 5) % 60
-			)
-		}
-		return Array.from({ length: 12 }, (_, i) => i * 5)
 	}
 
 	return (
@@ -423,7 +372,7 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 
 					<div>
 						<label className="text-sm font-medium mb-2 block">
-							Start Date <span className="text-destructive">*</span>
+							Date Range <span className="text-destructive">*</span>
 						</label>
 						<Drawer open={isStartDrawerOpen} onOpenChange={setIsStartDrawerOpen}>
 							<DrawerTrigger asChild>
@@ -431,176 +380,37 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 									variant="outline"
 									className={cn(
 										'w-full justify-start text-left font-normal',
-										!startDate && 'text-muted-foreground'
+										!dateRange && 'text-muted-foreground'
 									)}
 									disabled={!selectedResource}
 								>
 									<CalendarIcon className="mr-2 size-4" />
-									{startDate
-										? format(startDate, 'MM/dd/yyyy HH:mm')
-										: 'Select start date'}
+									{dateRange?.from
+										? `${format(dateRange.from, 'MM/dd/yyyy HH:mm')}${
+												dateRange.to ? ` - ${format(dateRange.to, 'MM/dd/yyyy HH:mm')}` : ''
+										  }`
+										: 'Select date range'}
 								</Button>
 							</DrawerTrigger>
 							<DrawerContent>
 								<DrawerHeader>
-									<DrawerTitle className="text-center">Select start date</DrawerTitle>
+									<DrawerTitle className="text-center">Select date range</DrawerTitle>
 								</DrawerHeader>
 								<div className="p-4 space-y-4 flex flex-col items-center">
-									<Calendar
-										mode="single"
-										selected={startDate}
-										onSelect={date => {
-											if (date) {
-												const newDate = roundToNextFiveMinutes(date)
-												setStartDate(newDate)
-												if (endDate && endDate <= newDate) {
-													setEndDate(undefined)
-												}
-											}
-										}}
+									<CalendarThing
+										mode="range"
+										selected={dateRange}
+										onSelect={range => setDateRange(range as DateRange)}
 										disabled={{ before: new Date() }}
+										showTime={true}
 									/>
 
-									{startDate && (
-										<>
-											<div className="flex flex-col items-center gap-4 pt-4 border-t w-full">
-												<div className="flex items-center gap-2">
-													<div>
-														<p className="text-sm font-medium mb-2">Hour</p>
-														<TimeSelector
-															options={getAvailableHours(startDate).map(hour => ({
-																value: hour,
-																label: String(hour).padStart(2, '0'),
-															}))}
-															selectedValue={startDate.getHours()}
-															onSelect={hour => {
-																setStartDate(setHours(startDate, hour))
-															}}
-														/>
-													</div>
-
-													<div>
-														<p className="text-sm font-medium mb-2">Minute</p>
-														<TimeSelector
-															options={
-																isToday(startDate)
-																	? getAvailableMinutes(startDate, startDate.getHours()).map(
-																			minute => ({
-																				value: minute,
-																				label: String(minute).padStart(2, '0'),
-																			})
-																		)
-																	: Array.from({ length: 12 }, (_, i) => ({
-																			value: i * 5,
-																			label: String(i * 5).padStart(2, '0'),
-																		}))
-															}
-															selectedValue={startDate.getMinutes()}
-															onSelect={minute => {
-																setStartDate(setMinutes(startDate, minute))
-															}}
-														/>
-													</div>
-												</div>
-											</div>
-											<Button
-												className="w-1/6 mt-4"
-												onClick={() => setIsStartDrawerOpen(false)}
-											>
-												Apply
-											</Button>
-										</>
-									)}
-								</div>
-							</DrawerContent>
-						</Drawer>
-					</div>
-
-					<div>
-						<label className="text-sm font-medium mb-2 block">End Date</label>
-						<Drawer open={isEndDrawerOpen} onOpenChange={setIsEndDrawerOpen}>
-							<DrawerTrigger asChild>
-								<Button
-									variant="outline"
-									className={cn(
-										'w-full justify-start text-left font-normal',
-										!endDate && 'text-muted-foreground'
-									)}
-									disabled={!startDate}
-								>
-									<CalendarIcon className="mr-2 size-4" />
-									{endDate ? format(endDate, 'MM/dd/yyyy HH:mm') : 'Select end date'}
-								</Button>
-							</DrawerTrigger>
-							<DrawerContent>
-								<DrawerHeader>
-									<DrawerTitle className="text-center">Select end date</DrawerTitle>
-								</DrawerHeader>
-								<div className="p-4 space-y-4 flex flex-col items-center">
-									<Calendar
-										mode="single"
-										selected={endDate}
-										onSelect={date => {
-											if (date) {
-												const newDate = roundToNextFiveMinutes(date)
-												setEndDate(newDate)
-											}
-										}}
-										disabled={{
-											before: startDate ? addMinutes(startDate, 5) : new Date(),
-										}}
-									/>
-
-									{endDate && (
-										<>
-											<div className="flex flex-col items-center gap-4 pt-4 border-t w-full">
-												<div className="flex items-center gap-2">
-													<div>
-														<p className="text-sm font-medium mb-2">Hour</p>
-														<TimeSelector
-															options={getAvailableHours(endDate).map(hour => ({
-																value: hour,
-																label: String(hour).padStart(2, '0'),
-															}))}
-															selectedValue={endDate.getHours()}
-															onSelect={hour => {
-																setEndDate(setHours(endDate, hour))
-															}}
-														/>
-													</div>
-
-													<div>
-														<p className="text-sm font-medium mb-2">Minute</p>
-														<TimeSelector
-															options={
-																isToday(endDate)
-																	? getAvailableMinutes(endDate, endDate.getHours()).map(
-																			minute => ({
-																				value: minute,
-																				label: String(minute).padStart(2, '0'),
-																			})
-																		)
-																	: Array.from({ length: 12 }, (_, i) => ({
-																			value: i * 5,
-																			label: String(i * 5).padStart(2, '0'),
-																		}))
-															}
-															selectedValue={endDate.getMinutes()}
-															onSelect={minute => {
-																setEndDate(setMinutes(endDate, minute))
-															}}
-														/>
-													</div>
-												</div>
-											</div>
-											<Button
-												className="w-1/6 mt-4"
-												onClick={() => setIsEndDrawerOpen(false)}
-											>
-												Apply
-											</Button>
-										</>
-									)}
+									<Button
+										className="w-1/6 mt-4"
+										onClick={() => setIsStartDrawerOpen(false)}
+									>
+										Apply
+									</Button>
 								</div>
 							</DrawerContent>
 						</Drawer>
@@ -609,7 +419,7 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 					<Button
 						onClick={handleBooking}
 						className="w-full"
-						disabled={isLoading || !startDate}
+						disabled={isLoading || !dateRange?.from}
 					>
 						{isLoading ? (
 							<div className="flex items-center justify-center">
@@ -624,20 +434,4 @@ export default function Booking({ resources }: { resources: Resource[] }) {
 			</div>
 		</div>
 	)
-}
-
-function roundToNextFiveMinutes(date: Date): Date {
-	const newDate = new Date(date)
-	const minutes = newDate.getMinutes()
-	const remainder = minutes % 5
-	if (remainder !== 0) {
-		newDate.setMinutes(minutes + (5 - remainder))
-	}
-	newDate.setSeconds(0)
-	newDate.setMilliseconds(0)
-	return newDate
-}
-
-function addMinutes(date: Date, minutes: number): Date {
-	return new Date(date.getTime() + minutes * 60000)
 }
